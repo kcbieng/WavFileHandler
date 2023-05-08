@@ -132,8 +132,8 @@ namespace WavFileHandlerGUI
             if (cartChunk != null)
             {
                 // Get the next Sunday date
-                DateTime nextSunday = GetNextSunday().Date.Add(cartChunk.EndDate.TimeOfDay);
-                string newEndDate = nextSunday.ToString("yyyy/MM/ddHH:mm:ss"); // Update the format to match the format used in ReadCartChunkData
+                DateTime nextSunday = GetNextSunday();
+                string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
 
                 // Update the EndDate field
 
