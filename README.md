@@ -8,4 +8,4 @@ Usage is as follows:
 2. Browse a directory to send the updated files into
 3. Hit the start button
 
-No promises it doesn't choke on your files, there's not any error handling here.
+No promises it doesn't choke on your files, there's not any error handling here. 
