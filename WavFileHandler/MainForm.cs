@@ -68,7 +68,7 @@ namespace WavFileHandlerGUI
             _watcher = new FileSystemWatcher
             {
                 Path = sourcePath,
-                Filter = "*.wav",
+                Filter = "*.*",
                 NotifyFilter = NotifyFilters.FileName
             };
             _watcher.Created += (sender, e) => ProcessWavFile(sender, e, destinationPath);
@@ -111,62 +111,110 @@ namespace WavFileHandlerGUI
                 return;
             }
 
-            // Check if the file has been processed recently
-            if (_processedFiles.TryGetValue(filePath, out DateTime lastProcessedTime))
+            string fileExtension = Path.GetExtension(filePath).ToLower();
+
+            if (fileExtension == ".wav")
             {
-                TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
-                const int debounceTimeInSeconds = 60; // You can adjust this value as needed
-                Console.WriteLine($"{lastProcessedTime}");
-                if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
+                // Check if the file has been processed recently
+                if (_processedFiles.TryGetValue(filePath, out DateTime lastProcessedTime))
                 {
-                    return; // Ignore the file if it was processed recently
-                }
-            }
-
-            // Update the last processed time for the file
-            _processedFiles.AddOrUpdate(filePath, DateTime.Now, (key, oldValue) => DateTime.Now);
-
-            SetStatusLabelText("Processing file...");
-
-            await Task.Run(async () =>
-            {
-                DateTime lastWriteTime;
-                while (true)
-                {
-                    try
+                    TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
+                    const int debounceTimeInSeconds = 60; // You can adjust this value as needed
+                    Console.WriteLine($"{lastProcessedTime}");
+                    if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
                     {
-                        lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+                        return; // Ignore the file if it was processed recently
+                    }
+                }
 
-                        // Wait for a short delay before processing the file
-                        await Task.Delay(1000);
+                // Update the last processed time for the file
+                _processedFiles.AddOrUpdate(filePath, DateTime.Now, (key, oldValue) => DateTime.Now);
 
-                        DateTime newLastWriteTime = File.GetLastWriteTimeUtc(filePath);
+                SetStatusLabelText("Processing file...");
 
-                        // Check if the file has been modified during the delay
-                        if (newLastWriteTime == lastWriteTime)
+                await Task.Run(async () =>
+                {
+                    DateTime lastWriteTime;
+                    while (true)
+                    {
+                        try
                         {
-                            using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                            lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Wait for a short delay before processing the file
+                            await Task.Delay(1000);
+
+                            DateTime newLastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Check if the file has been modified during the delay
+                            if (newLastWriteTime == lastWriteTime)
                             {
-                                UpdateCartChunkEndDate(stream);
-                                stream.Close();
-                                _processWavFileCounter++;
-                                Console.WriteLine($"{filePath} Process:{_processWavFileCounter} Watcher:{_watcherFileCounter}");
+                                using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                                {
+                                    UpdateCartChunkEndDate(stream);
+                                    stream.Close();
+                                    _processWavFileCounter++;
+                                    Console.WriteLine($"{filePath} Process:{_processWavFileCounter} Watcher:{_watcherFileCounter}");
+                                }
+                                break;
                             }
-                            break;
+                        }
+                        catch (IOException)
+                        {
+                            System.Threading.Thread.Sleep(1000);
                         }
                     }
-                    catch (IOException)
+
+                    string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
+                    File.Move(filePath, destinationFilePath);
+                });
+
+                SetStatusLabelText("Watching for files...");
+            }
+            else if (fileExtension == ".mp3")
+            {
+                // Move .mp3 files without processing
+                await Task.Run(async () =>
+                {
+                    DateTime lastWriteTime;
+                    while (true)
                     {
-                        System.Threading.Thread.Sleep(1000);
+                        try
+                        {
+                            lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Wait for a short delay before moving the file
+                            await Task.Delay(1000);
+
+                            DateTime newLastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Check if the file has been modified during the delay
+                            if (newLastWriteTime == lastWriteTime)
+                            {
+                                using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                                {
+                                    stream.Close();
+                                }
+                                break;
+                            }
+                        }
+                        catch (IOException)
+                        {
+                            System.Threading.Thread.Sleep(1000);
+                        }
                     }
-                }
 
-                string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
-                File.Move(filePath, destinationFilePath);
-            });
-
-            SetStatusLabelText("Watching for files...");
+                    string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
+                    File.Move(filePath, destinationFilePath);
+                });
+            }
+            else
+            {
+                // Ignore any other file types
+                return;
+            }
         }
+
 
         static void UpdateCartChunkEndDate(FileStream stream)
         {
