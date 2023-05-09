@@ -253,7 +253,7 @@ namespace WavFileHandlerGUI
 
                 // Write the updated EndDate back to the file
                 byte[] endDateBytes = Encoding.ASCII.GetBytes(newEndDate);
-                Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
+                //Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
                 stream.Write(endDateBytes, 0, endDateBytes.Length);
 
                 //Log a Message about updating the EndDate
