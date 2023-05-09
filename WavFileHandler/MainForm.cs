@@ -5,17 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WavFileHandler; // Add this to reference WavFileUtils
+using System.Collections.Concurrent; // Add this to use ConcurrentDictionary
 
 namespace WavFileHandlerGUI
 {
     public partial class MainForm : Form
     {
         private FileSystemWatcher _watcher;
+        private ConcurrentDictionary<string, DateTime> _processedFiles; // Add this line
+        private int _processWavFileCounter = 0; // Add this line
+        private int _watcherFileCounter = 0; //Watcher File Counter
 
         public MainForm()
         {
             InitializeComponent();
-            SetStatusLabelText("Not Processing");
+            SetStatusLabelText("Not Started");
+
+            _processedFiles = new ConcurrentDictionary<string, DateTime>(); // Initialize the dictionary
         }
 
         private void btnSourceBrowse_Click(object sender, EventArgs e)
@@ -67,7 +73,7 @@ namespace WavFileHandlerGUI
             };
             _watcher.Created += (sender, e) => ProcessWavFile(sender, e, destinationPath);
             _watcher.EnableRaisingEvents = true;
-
+            _watcherFileCounter++; // Increment the counter
             SetStatusLabelText("Watching for files...");
         }
 
@@ -79,7 +85,7 @@ namespace WavFileHandlerGUI
                 _watcher = null;
             }
 
-            SetStatusLabelText("Waiting for files...");
+            SetStatusLabelText("Not Running");
         }
 
         private void SetStatusLabelText(string text)
@@ -96,22 +102,58 @@ namespace WavFileHandlerGUI
 
         private async void ProcessWavFile(object sender, FileSystemEventArgs e, string destinationPath)
         {
-            SetStatusLabelText("Processing file...");
-
             string filePath = e.FullPath;
 
-            await Task.Run(() =>
+            if (!File.Exists(filePath))
             {
+                Console.WriteLine($"File not Found '{filePath}'");
+                SetStatusLabelText($"File not Found '{filePath}'");
+                return;
+            }
+
+            // Check if the file has been processed recently
+            if (_processedFiles.TryGetValue(filePath, out DateTime lastProcessedTime))
+            {
+                TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
+                const int debounceTimeInSeconds = 60; // You can adjust this value as needed
+                Console.WriteLine($"{lastProcessedTime}");
+                if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
+                {
+                    return; // Ignore the file if it was processed recently
+                }
+            }
+
+            // Update the last processed time for the file
+            _processedFiles.AddOrUpdate(filePath, DateTime.Now, (key, oldValue) => DateTime.Now);
+
+            SetStatusLabelText("Processing file...");
+
+            await Task.Run(async () =>
+            {
+                DateTime lastWriteTime;
                 while (true)
                 {
                     try
                     {
-                        using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                        lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                        // Wait for a short delay before processing the file
+                        await Task.Delay(1000);
+
+                        DateTime newLastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                        // Check if the file has been modified during the delay
+                        if (newLastWriteTime == lastWriteTime)
                         {
-                            UpdateCartChunkEndDate(stream);
-                            //stream.Close();
+                            using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                            {
+                                UpdateCartChunkEndDate(stream);
+                                stream.Close();
+                                _processWavFileCounter++;
+                                Console.WriteLine($"{filePath} Process:{_processWavFileCounter} Watcher:{_watcherFileCounter}");
+                            }
+                            break;
                         }
-                        break;
                     }
                     catch (IOException)
                     {
