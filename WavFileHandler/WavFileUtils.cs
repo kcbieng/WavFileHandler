@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
+using WavFileHandlerGUI;
 
 
 namespace WavFileHandler
@@ -46,19 +47,19 @@ namespace WavFileHandler
                         cartChunk.OutCue = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
                         cartChunk.StartDatePosition = reader.BaseStream.Position;
                         string startDateString = Encoding.ASCII.GetString(reader.ReadBytes(10));
-                        Console.WriteLine($"Trying to parse StartDate: '{startDateString}'");
+                        //Console.WriteLine($"Trying to parse StartDate: '{startDateString}'");
                         cartChunk.StartDate = DateTime.ParseExact(startDateString, allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
                         string startTimeString = Encoding.ASCII.GetString(reader.ReadBytes(8));
                         cartChunk.EndDatePosition = reader.BaseStream.Position;                        
                         string endDateString = Encoding.ASCII.GetString(reader.ReadBytes(10));
-                        Console.WriteLine($"Trying to parse EndDate: '{endDateString}'");
+                        //Console.WriteLine($"Trying to parse EndDate: '{endDateString}'");
                         cartChunk.EndDate = DateTime.ParseExact(endDateString, allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
                         string endTimeString = Encoding.ASCII.GetString(reader.ReadBytes(8));
                         //cartChunk.EndDate = DateTime.ParseExact(Encoding.ASCII.GetString(reader.ReadBytes(10)), "yyyy/MM/dd", null);                        
                         cartChunk.ProducerAppID = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
                         cartChunk.ProducerAppVersion = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
                         cartChunk.UserDef = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-
+                        MainForm.LogMessage($"Read: {cartChunk.Title} - Start {cartChunk.StartDate} End {cartChunk.EndDate}");
                         return cartChunk;
                     }
                     else

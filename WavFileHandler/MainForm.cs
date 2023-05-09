@@ -167,9 +167,7 @@ namespace WavFileHandlerGUI
                                 using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                                 {
                                     UpdateCartChunkEndDate(stream);
-                                    stream.Close();
-                                    _processWavFileCounter++;
-                                    Console.WriteLine($"{filePath} Process:{_processWavFileCounter} Watcher:{_watcherFileCounter}");
+                                    stream.Close();                                
                                 }
                                 break;
                             }
@@ -182,6 +180,8 @@ namespace WavFileHandlerGUI
 
                     string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
                     File.Move(filePath, destinationFilePath);
+                    _processWavFileCounter++;
+                    MainForm.LogMessage($"Moved {filePath} to {destinationFilePath} WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
                 });
 
                 SetStatusLabelText("Watching for files...");
@@ -222,12 +222,13 @@ namespace WavFileHandlerGUI
                     string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
                     File.Move(filePath, destinationFilePath);
                     _processMP3FileCounter++;
-                    MainForm.LogMessage($"Moved {filePath} to {destinationFilePath} {_processMP3FileCounter} {_watcherFileCounter}");
+                    MainForm.LogMessage($"Moved {filePath} to {destinationFilePath} MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
                 });
             }
             else
             {
                 // Ignore any other file types
+                MainForm.LogMessage($"{filePath} ignord: isn't an allowed file type");
                 return;
             }
         }
@@ -255,6 +256,8 @@ namespace WavFileHandlerGUI
                 Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
                 stream.Write(endDateBytes, 0, endDateBytes.Length);
 
+                //Log a Message about updating the EndDate
+                MainForm.LogMessage($"Updated EndDate from {cartChunk.EndDate} to {newEndDate}");
                 // Close the stream after the updated EndDate has been written
                 stream.Close();
             }
