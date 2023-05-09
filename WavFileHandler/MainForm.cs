@@ -238,42 +238,48 @@ namespace WavFileHandlerGUI
 
         void UpdateCartChunkEndDate(FileStream stream)
         {
-            CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
-            if (cartChunk != null)
+            try
             {
-                // Get the next Sunday date
-                DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
-                string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
-                string newEndTime = "23:59:59";
+                CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
+                if (cartChunk != null)
+                {
+                    // Get the next Sunday date
+                    DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
+                    string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
+                    string newEndTime = "23:59:59";
 
-                // Update the EndDate field
-                string originalEndDate = (cartChunk.EndDate).ToString("yyyy-MM-dd");
-                cartChunk.EndDate = nextSunday;
+                    // Update the EndDate field
+                    string originalEndDate = (cartChunk.EndDate).ToString("yyyy-MM-dd");
+                    cartChunk.EndDate = nextSunday;
 
-                // Go back to the start position of the EndDate field in the file
-                long endDatePosition = cartChunk.EndDatePosition;
-                stream.Seek(endDatePosition, SeekOrigin.Begin);
+                    // Go back to the start position of the EndDate field in the file
+                    long endDatePosition = cartChunk.EndDatePosition;
+                    stream.Seek(endDatePosition, SeekOrigin.Begin);
 
-                // Write the updated EndDate back to the file
-                byte[] endDateBytes = Encoding.ASCII.GetBytes(newEndDate);
-                //Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
-                stream.Write(endDateBytes, 0, endDateBytes.Length);
+                    // Write the updated EndDate back to the file
+                    byte[] endDateBytes = Encoding.ASCII.GetBytes(newEndDate);
+                    //Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
+                    stream.Write(endDateBytes, 0, endDateBytes.Length);
 
-                // Go back to the start position of the EndTime field in the file
-                long endTimePosition = cartChunk.EndTimePosition;
-                stream.Seek(endTimePosition, SeekOrigin.Begin);
+                    // Go back to the start position of the EndTime field in the file
+                    long endTimePosition = cartChunk.EndTimePosition;
+                    stream.Seek(endTimePosition, SeekOrigin.Begin);
 
-                //Write the Updated EndTime back to the file
-                byte[] endTimeBytes = Encoding.ASCII.GetBytes(newEndTime);
-                stream.Write(endTimeBytes, 0, endTimeBytes.Length);
+                    //Write the Updated EndTime back to the file
+                    byte[] endTimeBytes = Encoding.ASCII.GetBytes(newEndTime);
+                    stream.Write(endTimeBytes, 0, endTimeBytes.Length);
 
-                //Log a Message about updating the EndDate
-                LogMessage($"Updating EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
-                
-                // Close the stream after the updated EndDate has been written
-                stream.Close();
+                    //Log a Message about updating the EndDate
+                    LogMessage($"Updating EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+
+                    // Close the stream after the updated EndDate has been written
+                    stream.Close();
+                }
+            } catch (Exception ex)
+            {
+                LogMessage($"Failed to update cartchunk: {ex.Message}");
             }
-        }
+        }         
 
         static DateTime GetNextSunday(DateTime currentDate)
         {
@@ -301,7 +307,7 @@ namespace WavFileHandlerGUI
              catch (Exception ex)
             {
                 // Handle any errors that might occur while writing to the log file
-                SetStatusLabelText($"Error writing to log file: {_logFilePath}");
+                SetStatusLabelText($"Error writing to log file: {_logFilePath} {ex.Message}");
             }
         }
 
@@ -323,7 +329,7 @@ namespace WavFileHandlerGUI
             catch (Exception ex)
             {
                 // Handle any errors that might occur while reading from the log file
-                Console.WriteLine($"Error reading from log file: {ex.Message}");
+                SetStatusLabelText($"Error Updating Log Display: {ex.Message}");
             }
         }
     }
