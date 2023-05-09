@@ -65,7 +65,7 @@
             this.txtStartDate.Location = new System.Drawing.Point(62, 63);
             this.txtStartDate.Name = "txtStartDate";
             this.txtStartDate.ReadOnly = true;
-            this.txtStartDate.Size = new System.Drawing.Size(200, 20);
+            this.txtStartDate.Size = new System.Drawing.Size(202, 20);
             this.txtStartDate.TabIndex = 2;
             // 
             // txtEndDate
@@ -73,14 +73,14 @@
             this.txtEndDate.Location = new System.Drawing.Point(62, 89);
             this.txtEndDate.Name = "txtEndDate";
             this.txtEndDate.ReadOnly = true;
-            this.txtEndDate.Size = new System.Drawing.Size(200, 20);
+            this.txtEndDate.Size = new System.Drawing.Size(202, 20);
             this.txtEndDate.TabIndex = 3;
             // 
             // WavFileInfoForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(320, 118);
+            this.ClientSize = new System.Drawing.Size(330, 118);
             this.Controls.Add(this.txtEndDate);
             this.Controls.Add(this.txtStartDate);
             this.Controls.Add(this.lblEndDate);

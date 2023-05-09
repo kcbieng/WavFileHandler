@@ -5,17 +5,38 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WavFileHandler; // Add this to reference WavFileUtils
+using System.Collections.Concurrent; // Add this to use ConcurrentDictionary
 
 namespace WavFileHandlerGUI
 {
     public partial class MainForm : Form
     {
         private FileSystemWatcher _watcher;
+        private ConcurrentDictionary<string, DateTime> _processedFiles; // Add this line
+        private int _processWavFileCounter = 0; // Count WAVs Processed
+        private int _watcherFileCounter = 0; //Watcher File Counter
+        private int _processMP3FileCounter = 0;  //Count MP3s Processed
+        private static string _logFilePath = "log.txt";
+
+        public static string LogFilePath
+        {
+            get
+            {
+                return _logFilePath;
+            }
+
+            private set
+            {
+                _logFilePath = value;
+            }
+        }
 
         public MainForm()
         {
             InitializeComponent();
-            SetStatusLabelText("Not Processing");
+            SetStatusLabelText("Not Started");
+
+            _processedFiles = new ConcurrentDictionary<string, DateTime>(); // Initialize the dictionary
         }
 
         private void btnSourceBrowse_Click(object sender, EventArgs e)
@@ -62,12 +83,12 @@ namespace WavFileHandlerGUI
             _watcher = new FileSystemWatcher
             {
                 Path = sourcePath,
-                Filter = "*.wav",
+                Filter = "*.*",
                 NotifyFilter = NotifyFilters.FileName
             };
             _watcher.Created += (sender, e) => ProcessWavFile(sender, e, destinationPath);
             _watcher.EnableRaisingEvents = true;
-
+            _watcherFileCounter++; // Increment the counter
             SetStatusLabelText("Watching for files...");
         }
 
@@ -79,7 +100,7 @@ namespace WavFileHandlerGUI
                 _watcher = null;
             }
 
-            SetStatusLabelText("Waiting for files...");
+            SetStatusLabelText("Not Running");
         }
 
         private void SetStatusLabelText(string text)
@@ -96,45 +117,132 @@ namespace WavFileHandlerGUI
 
         private async void ProcessWavFile(object sender, FileSystemEventArgs e, string destinationPath)
         {
-            SetStatusLabelText("Processing file...");
-
             string filePath = e.FullPath;
 
-            await Task.Run(() =>
+            if (!File.Exists(filePath))
             {
-                while (true)
+                Console.WriteLine($"File not Found '{filePath}'");
+                SetStatusLabelText($"File not Found '{filePath}'");
+                return;
+            }
+
+            string fileExtension = Path.GetExtension(filePath).ToLower();
+
+            if (fileExtension == ".wav")
+            {
+                // Check if the file has been processed recently
+                if (_processedFiles.TryGetValue(filePath, out DateTime lastProcessedTime))
                 {
-                    try
+                    TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
+                    const int debounceTimeInSeconds = 60; // You can adjust this value as needed
+                    Console.WriteLine($"{lastProcessedTime}");
+                    if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
                     {
-                        using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-                        {
-                            UpdateCartChunkEndDate(stream);
-                            //stream.Close();
-                        }
-                        break;
-                    }
-                    catch (IOException)
-                    {
-                        System.Threading.Thread.Sleep(1000);
+                        return; // Ignore the file if it was processed recently
                     }
                 }
 
-                string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
-                File.Move(filePath, destinationFilePath);
-            });
+                // Update the last processed time for the file
+                _processedFiles.AddOrUpdate(filePath, DateTime.Now, (key, oldValue) => DateTime.Now);
 
-            SetStatusLabelText("Watching for files...");
+                SetStatusLabelText("Processing file...");
+
+                await Task.Run(async () =>
+                {
+                    DateTime lastWriteTime;
+                    while (true)
+                    {
+                        try
+                        {
+                            lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Wait for a short delay before processing the file
+                            await Task.Delay(1000);
+
+                            DateTime newLastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Check if the file has been modified during the delay
+                            if (newLastWriteTime == lastWriteTime)
+                            {
+                                using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                                {
+                                    UpdateCartChunkEndDate(stream);
+                                    stream.Close();                                
+                                }
+                                break;
+                            }
+                        }
+                        catch (IOException)
+                        {
+                            System.Threading.Thread.Sleep(1000);
+                        }
+                    }
+
+                    string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
+                    File.Move(filePath, destinationFilePath);
+                    _processWavFileCounter++;
+                    LogMessage($"Moved {filePath} to {destinationFilePath} WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
+                });
+
+                SetStatusLabelText("Watching for files...");
+            }
+            else if (fileExtension == ".mp3")
+            {
+                // Move .mp3 files without processing
+                await Task.Run(async () =>
+                {
+                    DateTime lastWriteTime;
+                    while (true)
+                    {
+                        try
+                        {
+                            lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Wait for a short delay before moving the file
+                            await Task.Delay(1000);
+
+                            DateTime newLastWriteTime = File.GetLastWriteTimeUtc(filePath);
+
+                            // Check if the file has been modified during the delay
+                            if (newLastWriteTime == lastWriteTime)
+                            {
+                                using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                                {
+                                    stream.Close();
+                                }
+                                break;
+                            }
+                        }
+                        catch (IOException)
+                        {
+                            System.Threading.Thread.Sleep(1000);
+                        }
+                    }
+
+                    string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
+                    File.Move(filePath, destinationFilePath);
+                    _processMP3FileCounter++;
+                    LogMessage($"Moved {filePath} to {destinationFilePath} MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                });
+            }
+            else
+            {
+                // Ignore any other file types
+                LogMessage($"{filePath} ignord: isn't an allowed file type");
+                return;
+            }
         }
 
-        static void UpdateCartChunkEndDate(FileStream stream)
+
+        void UpdateCartChunkEndDate(FileStream stream)
         {
             CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
             if (cartChunk != null)
             {
                 // Get the next Sunday date
-                DateTime nextSunday = GetNextSunday();
+                DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
                 string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
-
+                LogMessage($"Updating EndDate from {cartChunk.EndDate} to {newEndDate}");
                 // Update the EndDate field
 
                 cartChunk.EndDate = nextSunday;
@@ -145,25 +253,66 @@ namespace WavFileHandlerGUI
 
                 // Write the updated EndDate back to the file
                 byte[] endDateBytes = Encoding.ASCII.GetBytes(newEndDate);
-                Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
+                //Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
                 stream.Write(endDateBytes, 0, endDateBytes.Length);
 
+                //Log a Message about updating the EndDate
+                
                 // Close the stream after the updated EndDate has been written
                 stream.Close();
             }
         }
 
-        static DateTime GetNextSunday()
+        static DateTime GetNextSunday(DateTime currentDate)
         {
-            DateTime today = DateTime.Now;
-            int daysUntilSunday = ((int)DayOfWeek.Sunday - (int)today.DayOfWeek + 7) % 7;
-            return today.AddDays(daysUntilSunday);
+            int daysUntilSunday = ((int)DayOfWeek.Sunday - (int)currentDate.DayOfWeek + 7) % 7;
+            return currentDate.AddDays(daysUntilSunday);
         }
 
         private void btnShowWavInfo_Click(object sender, EventArgs e)
         {
             WavFileInfoForm wavFileInfoForm = new WavFileInfoForm();
             wavFileInfoForm.Show();
+        }
+
+        public void LogMessage(string message)
+        {
+            try
+            {
+                string logMessage = $"{DateTime.Now}: {message}";
+                using (StreamWriter writer = File.AppendText(MainForm.LogFilePath))
+                {
+                    writer.WriteLine(logMessage);
+                }
+                UpdateLogDisplay(logMessage);
+            }
+             catch (Exception ex)
+            {
+                // Handle any errors that might occur while writing to the log file
+                Console.WriteLine($"Error writing to log file: {_logFilePath}");
+            }
+        }
+
+        private void UpdateLogDisplay(string message)
+        {
+            try
+            {
+                if (txtLogDisplay.InvokeRequired)
+                {
+                    txtLogDisplay.Invoke(new Action<string>(UpdateLogDisplay), message);
+                }
+                else
+                {
+                    txtLogDisplay.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}");
+                    txtLogDisplay.ScrollToCaret();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors that might occur while reading from the log file
+                Console.WriteLine($"Error reading from log file: {ex.Message}");
+            }
         }
     }
 }

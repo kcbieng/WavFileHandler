@@ -31,8 +31,8 @@ namespace WavFileHandlerGUI
 
                         if (cartChunk != null)
                         {
-                            lblStartDate.Text = cartChunk.StartDate.ToString("yyyy-MM-dd");
-                            lblEndDate.Text = cartChunk.EndDate.ToString("yyyy-MM-dd");
+                            txtStartDate.Text = cartChunk.StartDate.ToString("yyyy-MM-dd");
+                            txtEndDate.Text = cartChunk.EndDate.ToString("yyyy-MM-dd");
                         }
                         else
                         {
