@@ -299,7 +299,7 @@ namespace WavFileHandlerGUI
              catch (Exception ex)
             {
                 // Handle any errors that might occur while writing to the log file
-                Console.WriteLine($"Error writing to log file: {_logFilePath}");
+                SetStatusLabelText($"Error writing to log file: {_logFilePath}");
             }
         }
 
