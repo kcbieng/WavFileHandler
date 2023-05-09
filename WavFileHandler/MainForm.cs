@@ -119,6 +119,8 @@ namespace WavFileHandlerGUI
         {
             string filePath = e.FullPath;
 
+            LogMessage($"Processing file:{Path.GetFileName(filePath)}");
+
             if (!File.Exists(filePath))
             {
                 Console.WriteLine($"File not Found '{filePath}'");
