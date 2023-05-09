@@ -19,6 +19,8 @@ namespace WavFileHandler
         public string UserDef { get; set; }
         public long StartDatePosition { get; set; }
         public long EndDatePosition { get; set; }
+        public long StartTimePosition { get; set; }
+        public long EndTimePosition { get; set; }
 
     }
 }
