@@ -27,6 +27,7 @@
             this.btnShowWavInfo = new System.Windows.Forms.Button();
             this.txtLogDisplay = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
+            string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             // 
             // lblSource
             // 
@@ -149,7 +150,7 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "WAV File Handler";
+            this.Text = $"WAV File Handler v{version}";
             this.ResumeLayout(false);
             this.PerformLayout();
 
