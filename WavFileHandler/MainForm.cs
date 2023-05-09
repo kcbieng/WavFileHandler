@@ -242,9 +242,10 @@ namespace WavFileHandlerGUI
                 // Get the next Sunday date
                 DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
                 string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
-                LogMessage($"Updating EndDate from {cartChunk.EndDate} to {newEndDate}");
-                // Update the EndDate field
+                string newEndTime = "23:59:59";
 
+                // Update the EndDate field
+                string originalEndDate = (cartChunk.EndDate).ToString("yyyy-MM-dd");
                 cartChunk.EndDate = nextSunday;
 
                 // Go back to the start position of the EndDate field in the file
@@ -256,7 +257,16 @@ namespace WavFileHandlerGUI
                 //Console.WriteLine($"Setting EndDate To: '{newEndDate}'");
                 stream.Write(endDateBytes, 0, endDateBytes.Length);
 
+                // Go back to the start position of the EndTime field in the file
+                long endTimePosition = cartChunk.EndTimePosition;
+                stream.Seek(endTimePosition, SeekOrigin.Begin);
+
+                //Write the Updated EndTime back to the file
+                byte[] endTimeBytes = Encoding.ASCII.GetBytes(newEndTime);
+                stream.Write(endTimeBytes, 0, endTimeBytes.Length);
+
                 //Log a Message about updating the EndDate
+                LogMessage($"Updating EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
                 
                 // Close the stream after the updated EndDate has been written
                 stream.Close();
