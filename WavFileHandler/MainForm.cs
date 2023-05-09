@@ -285,7 +285,7 @@ namespace WavFileHandlerGUI
                 {
                     writer.WriteLine(logMessage);
                 }
-                //UpdateLogDisplay();
+                UpdateLogDisplay(logMessage);
             }
              catch (Exception ex)
             {
@@ -294,29 +294,26 @@ namespace WavFileHandlerGUI
             }
         }
 
-       // private void UpdateLogDisplay()
-        //{
-          //  try
-           // {
-            //    if (File.Exists(_logFilePath))
-             //   {
-              //      string[] lines = File.ReadAllLines(_logFilePath);
-               //     int startLine = Math.Max(0, lines.Length - 25);
-//
- //                   StringBuilder sb = new StringBuilder();
-  //                  for (int i = startLine; i < lines.Length; i++)
-   //                 {
-    //                    sb.AppendLine(lines[i]);
-     //               }
-//
- //                   txtLogDisplay.Text = sb.ToString();
-  //              }
-   //         }
-    //        catch (Exception ex)
-     //       {
-      //          // Handle any errors that might occur while reading from the log file
-       //         Console.WriteLine($"Error reading from log file: {ex.Message}");
-        //    }
-        //}
+        private void UpdateLogDisplay(string message)
+        {
+            try
+            {
+                if (txtLogDisplay.InvokeRequired)
+                {
+                    txtLogDisplay.Invoke(new Action<string>(UpdateLogDisplay), message);
+                }
+                else
+                {
+                    txtLogDisplay.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}");
+                    txtLogDisplay.ScrollToCaret();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors that might occur while reading from the log file
+                Console.WriteLine($"Error reading from log file: {ex.Message}");
+            }
+        }
     }
 }
