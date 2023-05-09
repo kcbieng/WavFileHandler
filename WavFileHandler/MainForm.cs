@@ -313,7 +313,7 @@ namespace WavFileHandlerGUI
                 }
                 else
                 {
-                    txtLogDisplay.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}");
+                    txtLogDisplay.AppendText($"{message}{Environment.NewLine}");
                     txtLogDisplay.ScrollToCaret();
                 }
 
