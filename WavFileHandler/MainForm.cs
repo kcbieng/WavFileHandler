@@ -240,9 +240,9 @@ namespace WavFileHandlerGUI
             if (cartChunk != null)
             {
                 // Get the next Sunday date
-                DateTime nextSunday = GetNextSunday();
+                DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
                 string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
-
+                LogMessage($"Updating EndDate from {cartChunk.EndDate} to {newEndDate}");
                 // Update the EndDate field
 
                 cartChunk.EndDate = nextSunday;
@@ -257,17 +257,16 @@ namespace WavFileHandlerGUI
                 stream.Write(endDateBytes, 0, endDateBytes.Length);
 
                 //Log a Message about updating the EndDate
-                LogMessage($"Updated EndDate from {cartChunk.EndDate} to {newEndDate}");
+                
                 // Close the stream after the updated EndDate has been written
                 stream.Close();
             }
         }
 
-        static DateTime GetNextSunday()
+        static DateTime GetNextSunday(DateTime currentDate)
         {
-            DateTime today = DateTime.Now;
-            int daysUntilSunday = ((int)DayOfWeek.Sunday - (int)today.DayOfWeek + 7) % 7;
-            return today.AddDays(daysUntilSunday);
+            int daysUntilSunday = ((int)DayOfWeek.Sunday - (int)currentDate.DayOfWeek + 7) % 7;
+            return currentDate.AddDays(daysUntilSunday);
         }
 
         private void btnShowWavInfo_Click(object sender, EventArgs e)
