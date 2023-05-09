@@ -13,8 +13,23 @@ namespace WavFileHandlerGUI
     {
         private FileSystemWatcher _watcher;
         private ConcurrentDictionary<string, DateTime> _processedFiles; // Add this line
-        private int _processWavFileCounter = 0; // Add this line
+        private int _processWavFileCounter = 0; // Count WAVs Processed
         private int _watcherFileCounter = 0; //Watcher File Counter
+        private int _processMP3FileCounter = 0;  //Count MP3s Processed
+        private static string _logFilePath = "log.txt";
+
+        public static string LogFilePath
+        {
+            get
+            {
+                return _logFilePath;
+            }
+
+            private set
+            {
+                _logFilePath = value;
+            }
+        }
 
         public MainForm()
         {
@@ -206,6 +221,8 @@ namespace WavFileHandlerGUI
 
                     string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
                     File.Move(filePath, destinationFilePath);
+                    _processMP3FileCounter++;
+                    MainForm.LogMessage($"Moved {filePath} to {destinationFilePath} {_processMP3FileCounter} {_watcherFileCounter}");
                 });
             }
             else
@@ -254,6 +271,23 @@ namespace WavFileHandlerGUI
         {
             WavFileInfoForm wavFileInfoForm = new WavFileInfoForm();
             wavFileInfoForm.Show();
+        }
+
+        public static void LogMessage(string message)
+        {
+            try
+            {
+                string logMessage = $"{DateTime.Now}: {message}";
+                using (StreamWriter writer = File.AppendText(MainForm.LogFilePath))
+                {
+                    writer.WriteLine(logMessage);
+                }
+            }
+             catch (Exception ex)
+            {
+                // Handle any errors that might occur while writing to the log file
+                Console.WriteLine($"Error writing to log file: {ex.Message}");
+            }
         }
     }
 }
