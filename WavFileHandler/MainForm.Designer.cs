@@ -25,6 +25,7 @@
             this.btnStopWatching = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
             this.btnShowWavInfo = new System.Windows.Forms.Button();
+            this.txtLogDisplay = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
 
             this.lblSource.AutoSize = true;
@@ -97,10 +98,20 @@
             this.lblStatus.Size = new System.Drawing.Size(40, 13);
             this.lblStatus.TabIndex = 8;
             this.lblStatus.Text = "Status:";
+            //
+            // Text Log Display
+            //
+            this.txtLogDisplay.Location = new System.Drawing.Point(15, 120);
+            this.txtLogDisplay.Multiline = true;
+            this.txtLogDisplay.Name = "txtLogDisplay";
+            this.txtLogDisplay.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtLogDisplay.Size = new System.Drawing.Size(397, 200);
+            this.txtLogDisplay.TabIndex = 10;
+            this.txtLogDisplay.ReadOnly = true;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(424, 121);
+            this.ClientSize = new System.Drawing.Size(424, 340);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnStopWatching);
             this.Controls.Add(this.btnStartWatching);
@@ -111,6 +122,7 @@
             this.Controls.Add(this.lblDestination);
             this.Controls.Add(this.lblSource);
             this.Controls.Add(this.btnShowWavInfo);
+            this.Controls.Add(this.txtLogDisplay);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "MainForm";
@@ -130,5 +142,6 @@
         private System.Windows.Forms.Button btnStopWatching;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Button btnShowWavInfo;
+        private System.Windows.Forms.TextBox txtLogDisplay;
     }
 }

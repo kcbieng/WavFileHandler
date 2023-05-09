@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
-using WavFileHandlerGUI;
 
 
 namespace WavFileHandler
@@ -59,7 +58,6 @@ namespace WavFileHandler
                         cartChunk.ProducerAppID = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
                         cartChunk.ProducerAppVersion = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
                         cartChunk.UserDef = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        MainForm.LogMessage($"Read: {cartChunk.Title} - Start {cartChunk.StartDate} End {cartChunk.EndDate}");
                         return cartChunk;
                     }
                     else
@@ -68,6 +66,7 @@ namespace WavFileHandler
                         reader.BaseStream.Seek(chunkSize, SeekOrigin.Current);
                     }
                 }
+
             }
 
             return null;

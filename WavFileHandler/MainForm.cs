@@ -181,7 +181,7 @@ namespace WavFileHandlerGUI
                     string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
                     File.Move(filePath, destinationFilePath);
                     _processWavFileCounter++;
-                    MainForm.LogMessage($"Moved {filePath} to {destinationFilePath} WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
+                    LogMessage($"Moved {filePath} to {destinationFilePath} WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
                 });
 
                 SetStatusLabelText("Watching for files...");
@@ -222,19 +222,19 @@ namespace WavFileHandlerGUI
                     string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(filePath));
                     File.Move(filePath, destinationFilePath);
                     _processMP3FileCounter++;
-                    MainForm.LogMessage($"Moved {filePath} to {destinationFilePath} MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                    LogMessage($"Moved {filePath} to {destinationFilePath} MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
                 });
             }
             else
             {
                 // Ignore any other file types
-                MainForm.LogMessage($"{filePath} ignord: isn't an allowed file type");
+                LogMessage($"{filePath} ignord: isn't an allowed file type");
                 return;
             }
         }
 
 
-        static void UpdateCartChunkEndDate(FileStream stream)
+        void UpdateCartChunkEndDate(FileStream stream)
         {
             CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
             if (cartChunk != null)
@@ -257,7 +257,7 @@ namespace WavFileHandlerGUI
                 stream.Write(endDateBytes, 0, endDateBytes.Length);
 
                 //Log a Message about updating the EndDate
-                MainForm.LogMessage($"Updated EndDate from {cartChunk.EndDate} to {newEndDate}");
+                LogMessage($"Updated EndDate from {cartChunk.EndDate} to {newEndDate}");
                 // Close the stream after the updated EndDate has been written
                 stream.Close();
             }
@@ -276,7 +276,7 @@ namespace WavFileHandlerGUI
             wavFileInfoForm.Show();
         }
 
-        public static void LogMessage(string message)
+        public void LogMessage(string message)
         {
             try
             {
@@ -285,12 +285,38 @@ namespace WavFileHandlerGUI
                 {
                     writer.WriteLine(logMessage);
                 }
+                //UpdateLogDisplay();
             }
              catch (Exception ex)
             {
                 // Handle any errors that might occur while writing to the log file
-                Console.WriteLine($"Error writing to log file: {ex.Message}");
+                Console.WriteLine($"Error writing to log file: {_logFilePath}");
             }
         }
+
+       // private void UpdateLogDisplay()
+        //{
+          //  try
+           // {
+            //    if (File.Exists(_logFilePath))
+             //   {
+              //      string[] lines = File.ReadAllLines(_logFilePath);
+               //     int startLine = Math.Max(0, lines.Length - 25);
+//
+ //                   StringBuilder sb = new StringBuilder();
+  //                  for (int i = startLine; i < lines.Length; i++)
+   //                 {
+    //                    sb.AppendLine(lines[i]);
+     //               }
+//
+ //                   txtLogDisplay.Text = sb.ToString();
+  //              }
+   //         }
+    //        catch (Exception ex)
+     //       {
+      //          // Handle any errors that might occur while reading from the log file
+       //         Console.WriteLine($"Error reading from log file: {ex.Message}");
+        //    }
+        //}
     }
 }
