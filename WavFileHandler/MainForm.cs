@@ -81,16 +81,22 @@ namespace WavFileHandlerGUI
 
         private void StartWatching(string sourcePath, string destinationPath)
         {
-            _watcher = new FileSystemWatcher
+            try
             {
-                Path = sourcePath,
-                Filter = "*.*",
-                NotifyFilter = NotifyFilters.FileName
-            };
-            _watcher.Created += (sender, e) => ProcessWavFile(sender, e, destinationPath);
-            _watcher.EnableRaisingEvents = true;
-            _watcherFileCounter++; // Increment the counter
-            SetStatusLabelText("Watching for files...");
+                _watcher = new FileSystemWatcher
+                {
+                    Path = sourcePath,
+                    Filter = "*.*",
+                    NotifyFilter = NotifyFilters.FileName
+                };
+                _watcher.Created += (sender, e) => ProcessWavFile(sender, e, destinationPath);
+                _watcher.EnableRaisingEvents = true;
+                _watcherFileCounter++; // Increment the counter
+                SetStatusLabelText("Watching for files...");
+            } catch(Exception ex)
+            {
+                LogMessage($"Watcher not started: {ex}");
+            }
         }
 
         private void StopWatching()
@@ -303,7 +309,7 @@ namespace WavFileHandlerGUI
                     stream.Write(endTimeBytes, 0, endTimeBytes.Length);
 
                     //Log a Message about updating the EndDate
-                    LogMessage($"Updating EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                    LogMessage($"Updated EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
 
                     // Close the stream after the updated EndDate has been written
                     stream.Close();
