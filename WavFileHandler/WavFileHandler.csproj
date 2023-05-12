@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CartChunk.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="WavFileInfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
