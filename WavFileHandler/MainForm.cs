@@ -9,6 +9,7 @@ using WavFileHandler.Properties;
 using System.Collections.Concurrent; // Add this to use ConcurrentDictionary
 using System.Windows.Forms.VisualStyles;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 
 namespace WavFileHandlerGUI
 {
@@ -131,6 +132,20 @@ namespace WavFileHandlerGUI
         private async void ProcessWavFile(object sender, FileSystemEventArgs e, string destinationPath)
         {
             string filePath = e.FullPath;
+
+            // Check if the file has been queued recently
+            if (_processedFiles.TryGetValue(filePath, out DateTime lastProcessedTime))
+            {
+                TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
+                const int debounceTimeInSeconds = 60; // You can adjust this value as needed
+                                                      //Console.WriteLine($"{lastProcessedTime}");
+                if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
+                {
+                    LogMessage($"'{Path.GetFileName(filePath)}' skipped because that same file was processed in the last 60 Seconds.");
+                    return; // Ignore the file if it was processed recently
+                }
+            }
+
             // Add the file to the queue
             _fileQueue.Enqueue(filePath);
 
@@ -154,7 +169,7 @@ namespace WavFileHandlerGUI
                     {
                         //Console.WriteLine($"File not Found '{filePath}'");
                         //SetStatusLabelText($"File not Found '{filePath}'");
-                        LogMessage($"File '{filePath}' not found after processing began.");
+                        LogMessage($"File '{fileToProcess}' not found after processing began.");
                         return;
                     }
 
@@ -162,18 +177,6 @@ namespace WavFileHandlerGUI
                     Console.WriteLine($"'{fileToProcess}'");
                     if (fileExtension == ".wav")
                     {
-                        // Check if the file has been processed recently
-                        if (_processedFiles.TryGetValue(fileToProcess, out DateTime lastProcessedTime))
-                        {
-                            TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
-                            const int debounceTimeInSeconds = 60; // You can adjust this value as needed
-                                                                  //Console.WriteLine($"{lastProcessedTime}");
-                            if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
-                            {
-                                LogMessage($"'{Path.GetFileName(fileToProcess)}' skipped because that same file was processed in the last 60 Seconds.");
-                                return; // Ignore the file if it was processed recently
-                            }
-                        }
 
                         // Update the last processed time for the file
                         _processedFiles.AddOrUpdate(fileToProcess, DateTime.Now, (key, oldValue) => DateTime.Now);
@@ -216,7 +219,7 @@ namespace WavFileHandlerGUI
                                 string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(fileToProcess));
                                 File.Move(fileToProcess, destinationFilePath);
                                 _processWavFileCounter++;
-                                LogMessage($"Moved {Path.GetFileName(fileToProcess)} to {Path.GetDirectoryName(destinationFilePath)} WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
+                                LogMessage($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
                             }
                             catch (Exception ex)
                             {
@@ -228,18 +231,6 @@ namespace WavFileHandlerGUI
                     }
                     else if (fileExtension == ".mp3")
                     {
-                        // Check if the file has been processed recently
-                        if (_processedFiles.TryGetValue(fileToProcess, out DateTime lastProcessedTime))
-                        {
-                            TimeSpan timeSinceLastProcessed = DateTime.Now - lastProcessedTime;
-                            const int debounceTimeInSeconds = 60; // You can adjust this value as needed
-                                                                  //Console.WriteLine($"{lastProcessedTime}");
-                            if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
-                            {
-                                LogMessage($"'{Path.GetFileName(fileToProcess)}' skipped because that same file was processed in the last 60 Seconds.");
-                                return; // Ignore the file if it was processed recently
-                            }
-                        }
 
                         // Update the last processed time for the file
                         _processedFiles.AddOrUpdate(fileToProcess, DateTime.Now, (key, oldValue) => DateTime.Now);
@@ -281,7 +272,7 @@ namespace WavFileHandlerGUI
                                 string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(fileToProcess));
                                 File.Move(fileToProcess, destinationFilePath);
                                 _processMP3FileCounter++;
-                                LogMessage($"Moved {Path.GetFileName(fileToProcess)} to {Path.GetDirectoryName(destinationFilePath)} MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                                LogMessage($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
                             }
                             catch (Exception ex)
                             {
@@ -295,10 +286,11 @@ namespace WavFileHandlerGUI
                         LogMessage($"'{Path.GetFileName(fileToProcess)}' ignored: isn't an allowed file type");
                         return;
                     }
-                }
+                } 
             } finally
             {
                 _isProcessing = false;
+                SetStatusLabelText("Watching for files...");
             }
         }
 
