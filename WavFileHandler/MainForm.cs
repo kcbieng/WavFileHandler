@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WavFileHandler; // Add this to reference WavFileUtils
+using WavFileHandler.Properties;
 using System.Collections.Concurrent; // Add this to use ConcurrentDictionary
 using System.Windows.Forms.VisualStyles;
 
@@ -18,6 +19,7 @@ namespace WavFileHandlerGUI
         private int _watcherFileCounter = 0; //Watcher File Counter
         private int _processMP3FileCounter = 0;  //Count MP3s Processed
         private static string _logFilePath = "log.txt";
+
 
         public static string LogFilePath
         {
@@ -35,8 +37,9 @@ namespace WavFileHandlerGUI
         public MainForm()
         {
             InitializeComponent();
+            this.Load += MainForm_Load;
+            this.FormClosing += MainForm_FormClosing;
             SetStatusLabelText("Not Started");
-
             _processedFiles = new ConcurrentDictionary<string, DateTime>(); // Initialize the dictionary
         }
 
@@ -280,7 +283,11 @@ namespace WavFileHandlerGUI
             try
             {
                 CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
-                if (cartChunk != null)
+                if (cartChunk == null)
+                {
+                    LogMessage($"File does not contain CART chunk data.");
+                    return;
+                }
                 {
                     // Get the next Sunday date
                     DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
@@ -371,5 +378,18 @@ namespace WavFileHandlerGUI
                 SetStatusLabelText($"Error Updating Log Display: {ex.Message}");
             }
         }
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            txtSource.Text = Settings.Default.SourcePath;
+            txtDestination.Text = Settings.Default.DestinationPath;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Settings.Default.SourcePath = txtSource.Text;
+            Settings.Default.DestinationPath = txtDestination.Text;
+            Settings.Default.Save();
+        }
+
     }
 }

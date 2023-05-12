@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-
 namespace WavFileHandler
 {
     public static class WavFileUtils
@@ -13,14 +12,14 @@ namespace WavFileHandler
             stream.Position = 0;
             using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
-                // Read the RIFF header
-                if (Encoding.ASCII.GetString(reader.ReadBytes(4)) != "RIFF")
+                if (!TryReadBytes(reader, 4, out byte[] riffBytes) || Encoding.ASCII.GetString(riffBytes) != "RIFF")
                 {
                     return null;
                 }
 
                 reader.ReadInt32(); // Skip chunk size
-                if (Encoding.ASCII.GetString(reader.ReadBytes(4)) != "WAVE")
+
+                if (!TryReadBytes(reader, 4, out byte[] waveBytes) || Encoding.ASCII.GetString(waveBytes) != "WAVE")
                 {
                     return null;
                 }
@@ -28,38 +27,66 @@ namespace WavFileHandler
                 // Search for the CART chunk
                 while (reader.BaseStream.Position < reader.BaseStream.Length)
                 {
-                    string chunkID = Encoding.ASCII.GetString(reader.ReadBytes(4));
+                    if (!TryReadBytes(reader, 4, out byte[] chunkIDBytes))
+                    {
+                        return null;
+                    }
+
+                    string chunkID = Encoding.ASCII.GetString(chunkIDBytes);
                     int chunkSize = reader.ReadInt32();
 
                     if (chunkID == "cart")
                     {
-                        string[] allowedFormats = { "yyyy-MM-dd", "yyyy/MM/dd" };                        
-                        // Read the CART chunk data
+                        string[] allowedFormats = { "yyyy-MM-dd", "yyyy/MM/dd" };
                         CartChunk cartChunk = new CartChunk();
-                        cartChunk.Version = Encoding.ASCII.GetString(reader.ReadBytes(4));
-                        cartChunk.Title = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.Artist = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.CutID = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.ClientID = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.Category = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.Classification = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.OutCue = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 4, out byte[] versionBytes)) return null;
+                        cartChunk.Version = Encoding.ASCII.GetString(versionBytes);
+
+                        if (!TryReadBytes(reader, 64, out byte[] titleBytes)) return null;
+                        cartChunk.Title = Encoding.ASCII.GetString(titleBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] artistBytes)) return null;
+                        cartChunk.Artist = Encoding.ASCII.GetString(artistBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] cutIDBytes)) return null;
+                        cartChunk.CutID = Encoding.ASCII.GetString(cutIDBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] clientIDBytes)) return null;
+                        cartChunk.ClientID = Encoding.ASCII.GetString(clientIDBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] categoryBytes)) return null;
+                        cartChunk.Category = Encoding.ASCII.GetString(categoryBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] classificationBytes)) return null;
+                        cartChunk.Classification = Encoding.ASCII.GetString(classificationBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] outCueBytes)) return null;
+                        cartChunk.OutCue = Encoding.ASCII.GetString(outCueBytes).TrimEnd('\0');
+
                         cartChunk.StartDatePosition = reader.BaseStream.Position;
-                        string startDateString = Encoding.ASCII.GetString(reader.ReadBytes(10));
-                        //Console.WriteLine($"Trying to parse StartDate: '{startDateString}'");
-                        cartChunk.StartDate = DateTime.ParseExact(startDateString, allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+                        if (!TryReadBytes(reader, 10, out byte[] startDateBytes)) return null;
+                        cartChunk.StartDate = DateTime.ParseExact(Encoding.ASCII.GetString(startDateBytes), allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+
                         cartChunk.StartTimePosition = reader.BaseStream.Position;
-                        string startTimeString = Encoding.ASCII.GetString(reader.ReadBytes(8));
-                        cartChunk.EndDatePosition = reader.BaseStream.Position;                        
-                        string endDateString = Encoding.ASCII.GetString(reader.ReadBytes(10));
-                        //Console.WriteLine($"Trying to parse EndDate: '{endDateString}'");
-                        cartChunk.EndDate = DateTime.ParseExact(endDateString, allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+                        if (!TryReadBytes(reader, 8, out byte[] startTimeBytes)) return null;
+
+                        cartChunk.EndDatePosition = reader.BaseStream.Position;
+                        if (!TryReadBytes(reader, 10, out byte[] endDateBytes)) return null;
+                        cartChunk.EndDate = DateTime.ParseExact(Encoding.ASCII.GetString(endDateBytes), allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+
                         cartChunk.EndTimePosition = reader.BaseStream.Position;
-                        string endTimeString = Encoding.ASCII.GetString(reader.ReadBytes(8));
-                        //cartChunk.EndDate = DateTime.ParseExact(Encoding.ASCII.GetString(reader.ReadBytes(10)), "yyyy/MM/dd", null);                        
-                        cartChunk.ProducerAppID = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.ProducerAppVersion = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
-                        cartChunk.UserDef = Encoding.ASCII.GetString(reader.ReadBytes(64)).TrimEnd('\0');
+                        if (!TryReadBytes(reader, 8, out byte[] endTimeBytes)) return null;
+
+                        if (!TryReadBytes(reader, 64, out byte[] producerAppIDBytes)) return null;
+                        cartChunk.ProducerAppID = Encoding.ASCII.GetString(producerAppIDBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] producerAppVersionBytes)) return null;
+                        cartChunk.ProducerAppVersion = Encoding.ASCII.GetString(producerAppVersionBytes).TrimEnd('\0');
+
+                        if (!TryReadBytes(reader, 64, out byte[] userDefBytes)) return null;
+                        cartChunk.UserDef = Encoding.ASCII.GetString(userDefBytes).TrimEnd('\0');
+
                         return cartChunk;
                     }
                     else
@@ -68,10 +95,24 @@ namespace WavFileHandler
                         reader.BaseStream.Seek(chunkSize, SeekOrigin.Current);
                     }
                 }
-
             }
 
             return null;
         }
+
+        private static bool TryReadBytes(BinaryReader reader, int length, out byte[] result)
+        {
+            result = null;
+
+            if (reader.BaseStream.Length - reader.BaseStream.Position < length)
+            {
+                // Not enough data left to read
+                return false;
+            }
+
+            result = reader.ReadBytes(length);
+            return true;
+        }
     }
 }
+
