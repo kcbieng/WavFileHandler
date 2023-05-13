@@ -10,6 +10,7 @@ using System.Collections.Concurrent; // Add this to use ConcurrentDictionary
 using System.Windows.Forms.VisualStyles;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
+using System.Net.Mail;
 
 namespace WavFileHandlerGUI
 {
@@ -23,6 +24,11 @@ namespace WavFileHandlerGUI
         private static string _logFilePath = "log.txt";
         private Queue<string> _fileQueue = new Queue<string>(); // Queue to hold the files to be processed
         private bool _isProcessing = false; // Flag to indicate if a file is currently being processed
+        private static string fromEmailAddress;
+        private static string toEmailAddress;
+        private static string mailServer;
+        private static int mailServerPort;
+
 
 
         public static string LogFilePath
@@ -102,7 +108,7 @@ namespace WavFileHandlerGUI
                 SetStatusLabelText("Watching for files...");
             } catch(Exception ex)
             {
-                LogMessage($"Watcher not started: {ex}");
+                LogMessage($"Watcher failed to start: {ex}", true);
             }
         }
 
@@ -141,7 +147,7 @@ namespace WavFileHandlerGUI
                                                       //Console.WriteLine($"{lastProcessedTime}");
                 if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
                 {
-                    LogMessage($"'{Path.GetFileName(filePath)}' skipped because that same file was processed in the last 60 Seconds.");
+                    LogMessage($"'{Path.GetFileName(filePath)}' skipped because that same file was processed in the last 60 Seconds.", true);
                     return; // Ignore the file if it was processed recently
                 }
             }
@@ -169,7 +175,7 @@ namespace WavFileHandlerGUI
                     {
                         //Console.WriteLine($"File not Found '{filePath}'");
                         //SetStatusLabelText($"File not Found '{filePath}'");
-                        LogMessage($"File '{fileToProcess}' not found after processing began.");
+                        LogMessage($"File '{fileToProcess}' not found after processing began.", true);
                         return;
                     }
 
@@ -223,7 +229,7 @@ namespace WavFileHandlerGUI
                             }
                             catch (Exception ex)
                             {
-                                LogMessage($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}");
+                                LogMessage($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
                             }
                         });
 
@@ -276,14 +282,14 @@ namespace WavFileHandlerGUI
                             }
                             catch (Exception ex)
                             {
-                                LogMessage($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}");
+                                LogMessage($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
                             }
                         });
                     }
                     else
                     {
                         // Ignore any other file types
-                        LogMessage($"'{Path.GetFileName(fileToProcess)}' ignored: isn't an allowed file type");
+                        LogMessage($"'{Path.GetFileName(fileToProcess)}' ignored: isn't an allowed file type", true);
                         return;
                     }
                 } 
@@ -340,7 +346,7 @@ namespace WavFileHandlerGUI
                 }
             } catch (Exception ex)
             {
-                LogMessage($"Failed to update cartchunk: {ex.Message}");
+                LogMessage($"Failed to update cartchunk: {ex.Message}", true);
             }
         }         
 
@@ -356,7 +362,7 @@ namespace WavFileHandlerGUI
             wavFileInfoForm.Show();
         }
 
-        public void LogMessage(string message)
+        public void LogMessage(string message, bool iserror = false)
         {
             try
             {
@@ -366,6 +372,7 @@ namespace WavFileHandlerGUI
                     writer.WriteLine(logMessage);
                 }
                 UpdateLogDisplay(logMessage);
+                if (iserror ) { SendMail(logMessage); }
             }
              catch (Exception ex)
             {
@@ -408,5 +415,26 @@ namespace WavFileHandlerGUI
             Settings.Default.Save();
         }
 
+        private void SendMail(string message)
+        {
+            try
+            {
+                var smtpClient = new SmtpClient($"{mailServer}")
+                {
+                    Port = mailServerPort,
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress($"{fromEmailAddress}"),
+                    Subject = "Error Processing File",
+                    Body = $"<h1>Test</h1></br> {message}",
+                    IsBodyHtml = true,
+                };
+                mailMessage.To.Add($"{toEmailAddress}");
+                smtpClient.Send(mailMessage);
+            }
+            catch (Exception ex) { LogMessage($"{ex}"); }
+        }
     }
 }
