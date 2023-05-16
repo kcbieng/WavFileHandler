@@ -479,7 +479,7 @@ namespace WavFileHandlerGUI
                 {
                     From = new MailAddress($"{fromEmailAddress}"),
                     Subject = "WavFile Handler Error",
-                    Body = $"<h1>Test</h1></br> {message}",
+                    Body = $"<h2>New Error Logged on WavFileHandler</h2></br> {message}",
                     IsBodyHtml = true,
                 };
                 if (!string.IsNullOrEmpty(toEmail1))

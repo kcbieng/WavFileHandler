@@ -1,4 +1,6 @@
-﻿namespace WavFileHandlerGUI
+﻿using System;
+
+namespace WavFileHandlerGUI
 {
     partial class MainForm
     {
@@ -27,6 +29,7 @@
             this.btnShowWavInfo = new System.Windows.Forms.Button();
             this.btnShowConfigPage = new System.Windows.Forms.Button();
             this.txtLogDisplay = new System.Windows.Forms.TextBox();
+            string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             this.SuspendLayout();
             // 
             // lblSource
@@ -125,8 +128,8 @@
             this.btnShowConfigPage.Location = new System.Drawing.Point(572, 91);
             this.btnShowConfigPage.Name = "btnShowConfigPage";
             this.btnShowConfigPage.Size = new System.Drawing.Size(75, 23);
-            this.btnShowConfigPage.Text = "Config";
             this.btnShowConfigPage.TabIndex = 11;
+            this.btnShowConfigPage.Text = "Config";
             this.btnShowConfigPage.UseVisualStyleBackColor = true;
             this.btnShowConfigPage.Click += new System.EventHandler(this.btnShowConfigPage_Click);
             // 
@@ -160,6 +163,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "MainForm";
+            this.Text = $"{version}";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -22,6 +22,7 @@
             this.txtStartDate = new System.Windows.Forms.TextBox();
             this.txtEndDate = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
+            string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             // 
             // btnOpen
             // 
@@ -89,7 +90,7 @@
             this.Controls.Add(this.btnOpen);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.Name = "WavFileInfoForm";
+            this.Name = ($" WavFile Handler v{version}");
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "WAV File Info";
             this.ResumeLayout(false);
