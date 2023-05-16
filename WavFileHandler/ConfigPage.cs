@@ -45,6 +45,7 @@ namespace WavFileHandlerGUI
             MainForm.toEmail3 = toEmail3_Textbox.Text.TrimEnd('\0');
             MainForm.toEmail4 = toEmail4_Textbox.Text.TrimEnd('\0');
             MainForm.updateStartDate = updateStartDate.Checked;
+            Settings.Default.Save();
             this.Close();
         }
         private void clearSettings_Click(object sender, EventArgs e)
