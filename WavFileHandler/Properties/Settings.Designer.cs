@@ -46,5 +46,101 @@ namespace WavFileHandler.Properties {
                 this["DestinationPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string fromEmail {
+            get {
+                return ((string)(this["fromEmail"]));
+            }
+            set {
+                this["fromEmail"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string mailServer {
+            get {
+                return ((string)(this["mailServer"]));
+            }
+            set {
+                this["mailServer"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int mailServerPort {
+            get {
+                return ((int)(this["mailServerPort"]));
+            }
+            set {
+                this["mailServerPort"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string toEmail1 {
+            get {
+                return ((string)(this["toEmail1"]));
+            }
+            set {
+                this["toEmail1"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string toEmail2 {
+            get {
+                return ((string)(this["toEmail2"]));
+            }
+            set {
+                this["toEmail2"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string toEmail3 {
+            get {
+                return ((string)(this["toEmail3"]));
+            }
+            set {
+                this["toEmail3"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string toEmail4 {
+            get {
+                return ((string)(this["toEmail4"]));
+            }
+            set {
+                this["toEmail4"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UpdateStartDate {
+            get {
+                return ((bool)(this["UpdateStartDate"]));
+            }
+            set {
+                this["UpdateStartDate"] = value;
+            }
+        }
     }
 }

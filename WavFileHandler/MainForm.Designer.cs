@@ -25,9 +25,9 @@
             this.btnStopWatching = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
             this.btnShowWavInfo = new System.Windows.Forms.Button();
+            this.btnShowConfigPage = new System.Windows.Forms.Button();
             this.txtLogDisplay = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
-            string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             // 
             // lblSource
             // 
@@ -115,10 +115,20 @@
             this.btnShowWavInfo.Location = new System.Drawing.Point(572, 64);
             this.btnShowWavInfo.Name = "btnShowWavInfo";
             this.btnShowWavInfo.Size = new System.Drawing.Size(75, 23);
-            this.btnShowWavInfo.TabIndex = 9;
+            this.btnShowWavInfo.TabIndex = 10;
             this.btnShowWavInfo.Text = "Show Info";
             this.btnShowWavInfo.UseVisualStyleBackColor = true;
             this.btnShowWavInfo.Click += new System.EventHandler(this.btnShowWavInfo_Click);
+            // 
+            // btnShowConfigPage
+            // 
+            this.btnShowConfigPage.Location = new System.Drawing.Point(572, 91);
+            this.btnShowConfigPage.Name = "btnShowConfigPage";
+            this.btnShowConfigPage.Size = new System.Drawing.Size(75, 23);
+            this.btnShowConfigPage.Text = "Config";
+            this.btnShowConfigPage.TabIndex = 11;
+            this.btnShowConfigPage.UseVisualStyleBackColor = true;
+            this.btnShowConfigPage.Click += new System.EventHandler(this.btnShowConfigPage_Click);
             // 
             // txtLogDisplay
             // 
@@ -128,7 +138,7 @@
             this.txtLogDisplay.ReadOnly = true;
             this.txtLogDisplay.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtLogDisplay.Size = new System.Drawing.Size(632, 261);
-            this.txtLogDisplay.TabIndex = 10;
+            this.txtLogDisplay.TabIndex = 11;
             // 
             // MainForm
             // 
@@ -145,12 +155,12 @@
             this.Controls.Add(this.lblDestination);
             this.Controls.Add(this.lblSource);
             this.Controls.Add(this.btnShowWavInfo);
+            this.Controls.Add(this.btnShowConfigPage);
             this.Controls.Add(this.txtLogDisplay);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = $"WAV File Handler v{version}";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,6 +176,7 @@
         private System.Windows.Forms.Button btnStopWatching;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Button btnShowWavInfo;
+        private System.Windows.Forms.Button btnShowConfigPage;
         private System.Windows.Forms.TextBox txtLogDisplay;
     }
 }

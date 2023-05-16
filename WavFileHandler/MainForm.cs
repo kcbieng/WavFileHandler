@@ -11,6 +11,8 @@ using System.Windows.Forms.VisualStyles;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Net.Mail;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace WavFileHandlerGUI
 {
@@ -24,11 +26,16 @@ namespace WavFileHandlerGUI
         private static string _logFilePath = "log.txt";
         private Queue<string> _fileQueue = new Queue<string>(); // Queue to hold the files to be processed
         private bool _isProcessing = false; // Flag to indicate if a file is currently being processed
-        private static string fromEmailAddress;
-        private static string toEmailAddress;
-        private static string mailServer;
-        private static int mailServerPort;
-
+        public static string fromEmailAddress;
+        public static string mailServer;
+        public static int mailServerPort;
+        public static string toEmail1;
+        public static string toEmail2;
+        public static string toEmail3;
+        public static string toEmail4;
+        public static bool updateStartDate;
+        public static string sourcePath;
+        public static string destinationPath;
 
 
         public static string LogFilePath
@@ -59,7 +66,8 @@ namespace WavFileHandlerGUI
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    txtSource.Text = dialog.SelectedPath;
+                    sourcePath = dialog.SelectedPath;
+                    txtSource.Text = sourcePath;
                 }
             }
         }
@@ -70,7 +78,8 @@ namespace WavFileHandlerGUI
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    txtDestination.Text = dialog.SelectedPath;
+                    destinationPath = dialog.SelectedPath;
+                    txtDestination.Text = destinationPath;
                 }
             }
         }
@@ -106,7 +115,8 @@ namespace WavFileHandlerGUI
                 _watcher.EnableRaisingEvents = true;
                 _watcherFileCounter++; // Increment the counter
                 SetStatusLabelText("Watching for files...");
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 LogMessage($"Watcher failed to start: {ex}", true);
             }
@@ -292,8 +302,9 @@ namespace WavFileHandlerGUI
                         LogMessage($"'{Path.GetFileName(fileToProcess)}' ignored: isn't an allowed file type", true);
                         return;
                     }
-                } 
-            } finally
+                }
+            }
+            finally
             {
                 _isProcessing = false;
                 SetStatusLabelText("Watching for files...");
@@ -312,11 +323,28 @@ namespace WavFileHandlerGUI
                     return;
                 }
                 {
+                    DateTime oldStartDate = cartChunk.StartDate;
+                    DateTime oldEndDate = cartChunk.EndDate;
+
                     // Get the next Sunday date
-                    DateTime nextSunday = GetNextSunday(cartChunk.StartDate);
+                    DateTime nextSunday = GetNextSunday(oldStartDate);
                     string newEndDate = nextSunday.ToString("yyyy-MM-dd"); // Update the format to match the format used in ReadCartChunkData
                     string newEndTime = "23:59:59";
+                    string newStartDate = DateTime.Now.ToString("yyyy-MM-dd");
+                    if (updateStartDate == true)
+                    {
+                        // Update the StartDate field
+                        cartChunk.StartDate = DateTime.ParseExact(newStartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None);
 
+                        // Go back to the start position of the StartDate field in the file
+                        long startDatePosition = cartChunk.StartDatePosition;
+                        stream.Seek(startDatePosition, SeekOrigin.Begin);
+
+                        // Write the updated StartDate back to the file
+                        byte[] startDateBytes = Encoding.ASCII.GetBytes(newStartDate);
+                        //Console.WriteLine($"Setting EndDate To: '{newStartDate}'");
+                        stream.Write(startDateBytes, 0, startDateBytes.Length);
+                    }
                     // Update the EndDate field
                     string originalEndDate = (cartChunk.EndDate).ToString("yyyy-MM-dd");
                     cartChunk.EndDate = nextSunday;
@@ -337,18 +365,26 @@ namespace WavFileHandlerGUI
                     //Write the Updated EndTime back to the file
                     byte[] endTimeBytes = Encoding.ASCII.GetBytes(newEndTime);
                     stream.Write(endTimeBytes, 0, endTimeBytes.Length);
-
-                    //Log a Message about updating the EndDate
-                    LogMessage($"Updated EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                    if (updateStartDate != true)
+                    {
+                        //Log a Message about updating the EndDate
+                        LogMessage($"Updated EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                    }
+                    else
+                    {
+                        //Log a Message about updating the EndDate
+                        LogMessage($"Updated StartDate from {oldStartDate} to {newStartDate} and EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                    }
 
                     // Close the stream after the updated EndDate has been written
                     stream.Close();
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 LogMessage($"Failed to update cartchunk: {ex.Message}", true);
             }
-        }         
+        }
 
         static DateTime GetNextSunday(DateTime currentDate)
         {
@@ -362,6 +398,12 @@ namespace WavFileHandlerGUI
             wavFileInfoForm.Show();
         }
 
+        private void btnShowConfigPage_Click(object sender, EventArgs e)
+        {
+            ConfigPage configPage = new ConfigPage();
+            configPage.Show();
+        }
+
         public void LogMessage(string message, bool iserror = false)
         {
             try
@@ -372,9 +414,9 @@ namespace WavFileHandlerGUI
                     writer.WriteLine(logMessage);
                 }
                 UpdateLogDisplay(logMessage);
-                if (iserror ) { SendMail(logMessage); }
+                if (iserror) { SendMail(logMessage); }
             }
-             catch (Exception ex)
+            catch (Exception ex)
             {
                 // Handle any errors that might occur while writing to the log file
                 SetStatusLabelText($"Error writing to log file: {_logFilePath} {ex.Message}");
@@ -406,14 +448,23 @@ namespace WavFileHandlerGUI
         {
             txtSource.Text = Settings.Default.SourcePath;
             txtDestination.Text = Settings.Default.DestinationPath;
+            mailServer = Settings.Default.mailServer;
+            mailServerPort = Settings.Default.mailServerPort;
+            fromEmailAddress = Settings.Default.fromEmail; ;
+            toEmail1 = Settings.Default.toEmail1;
+            toEmail2 = Settings.Default.toEmail2;
+            toEmail3 = Settings.Default.toEmail3;
+            toEmail4 = Settings.Default.toEmail4;
+            updateStartDate = Settings.Default.UpdateStartDate;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Settings.Default.SourcePath = txtSource.Text;
-            Settings.Default.DestinationPath = txtDestination.Text;
+            Settings.Default.SourcePath = sourcePath;
+            Settings.Default.DestinationPath = destinationPath;
             Settings.Default.Save();
         }
+
 
         private void SendMail(string message)
         {
@@ -427,14 +478,29 @@ namespace WavFileHandlerGUI
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress($"{fromEmailAddress}"),
-                    Subject = "Error Processing File",
+                    Subject = "WavFile Handler Error",
                     Body = $"<h1>Test</h1></br> {message}",
                     IsBodyHtml = true,
                 };
-                mailMessage.To.Add($"{toEmailAddress}");
+                if (!string.IsNullOrEmpty(toEmail1))
+                {
+                    mailMessage.To.Add($"{toEmail1}");
+                }
+                if (!string.IsNullOrEmpty(toEmail2))
+                {
+                    mailMessage.To.Add($"{toEmail2}");
+                }
+                if (!string.IsNullOrEmpty(toEmail3))
+                {
+                    mailMessage.To.Add($"{toEmail3}");
+                }
+                if (!string.IsNullOrEmpty(toEmail4))
+                {
+                    mailMessage.To.Add($"{toEmail4}");
+                }
                 smtpClient.Send(mailMessage);
             }
             catch (Exception ex) { LogMessage($"{ex}"); }
         }
-    }
+    } 
 }
