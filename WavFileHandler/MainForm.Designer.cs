@@ -163,7 +163,7 @@ namespace WavFileHandlerGUI
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = $"{version}";
+            this.Text = $"WavFile Handler v{version}";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.ResumeLayout(false);
             this.PerformLayout();
