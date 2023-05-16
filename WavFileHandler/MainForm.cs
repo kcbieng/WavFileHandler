@@ -373,7 +373,7 @@ namespace WavFileHandlerGUI
                     else
                     {
                         //Log a Message about updating the EndDate
-                        LogMessage($"Updated StartDate from {oldStartDate} to {newStartDate} and EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                        LogMessage($"Updated StartDate from {oldStartDate.ToString("yyyy-MM-dd")} to {newStartDate} and EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
                     }
 
                     // Close the stream after the updated EndDate has been written
