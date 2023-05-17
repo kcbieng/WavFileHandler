@@ -61,6 +61,7 @@ namespace WavFileHandlerGUI
             Settings.Default.DestinationPath = null;
             MainForm.sourcePath = null;
             MainForm.destinationPath = null;
+            Settings.Default.Save();
             this.Close();
         }
     }
