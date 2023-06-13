@@ -26,17 +26,24 @@ namespace WavFileHandlerGUI
 
                     using (FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
-                        CartChunk cartChunk; // Define the cartChunk variable
-                        cartChunk = WavFileUtils.ReadCartChunkData(stream);
-
-                        if (cartChunk != null)
+                        try
                         {
+                            CartChunk cartChunk; // Define the cartChunk variable
+                            cartChunk = WavFileUtils.ReadCartChunkData(stream);
+
+                            if (cartChunk != null)
+                            {
                             txtStartDate.Text = cartChunk.StartDate.ToString("yyyy-MM-dd");
                             txtEndDate.Text = cartChunk.EndDate.ToString("yyyy-MM-dd");
-                        }
-                        else
-                        {
+                            }
+                            else
+                            {
                             MessageBox.Show("No CART chunk found in the selected WAV file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"{ex}");
                         }
                     }
                 }
