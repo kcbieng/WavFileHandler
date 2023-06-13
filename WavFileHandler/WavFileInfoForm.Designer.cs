@@ -22,6 +22,7 @@
             this.txtStartDate = new System.Windows.Forms.TextBox();
             this.txtEndDate = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
+
             // 
             // btnOpen
             // 
