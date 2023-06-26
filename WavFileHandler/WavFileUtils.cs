@@ -70,14 +70,16 @@ namespace WavFileHandler
 
                             cartChunk.StartDatePosition = reader.BaseStream.Position;
                             if (!TryReadBytes(reader, 10, out byte[] startDateBytes)) return null;
-                            cartChunk.StartDate = DateTime.ParseExact(Encoding.ASCII.GetString(startDateBytes), allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+                            if (startDateBytes.Length != 0 && !Array.TrueForAll(startDateBytes, b => b == 0)) { cartChunk.StartDate = DateTime.ParseExact(Encoding.ASCII.GetString(startDateBytes), allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None); }
+                            else { cartChunk.StartDate = DateTime.ParseExact("0001/01/01", allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None); };
 
                             cartChunk.StartTimePosition = reader.BaseStream.Position;
                             if (!TryReadBytes(reader, 8, out byte[] startTimeBytes)) return null;
 
                             cartChunk.EndDatePosition = reader.BaseStream.Position;
                             if (!TryReadBytes(reader, 10, out byte[] endDateBytes)) return null;
-                            cartChunk.EndDate = DateTime.ParseExact(Encoding.ASCII.GetString(endDateBytes), allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+                            if (endDateBytes.Length != 0 && !Array.TrueForAll(endDateBytes, b => b == 0)) { cartChunk.EndDate = DateTime.ParseExact(Encoding.ASCII.GetString(endDateBytes), allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None); }
+                            else { cartChunk.EndDate = DateTime.ParseExact("0001/01/01", allowedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None); };
 
                             cartChunk.EndTimePosition = reader.BaseStream.Position;
                             if (!TryReadBytes(reader, 8, out byte[] endTimeBytes)) return null;
@@ -121,9 +123,10 @@ namespace WavFileHandler
             {
                 // Not enough data left to read
                 return false;
-            }
+            };
 
             result = reader.ReadBytes(length);
+
             return true;
         }
     }

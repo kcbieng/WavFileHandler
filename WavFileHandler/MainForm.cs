@@ -317,7 +317,7 @@ namespace WavFileHandlerGUI
             try
             {
                 CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
-                if (cartChunk == null)
+                if (cartChunk == null || cartChunk.StartDate == DateTime.Parse("0001/01/01") || cartChunk.EndDate == DateTime.Parse("0001/01/01"))
                 {
                     LogMessage($"File does not contain CART chunk data.");
                     return;

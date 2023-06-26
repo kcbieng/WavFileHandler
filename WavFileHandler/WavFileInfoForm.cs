@@ -31,7 +31,7 @@ namespace WavFileHandlerGUI
                             CartChunk cartChunk; // Define the cartChunk variable
                             cartChunk = WavFileUtils.ReadCartChunkData(stream);
 
-                            if (cartChunk != null)
+                            if (cartChunk != null && cartChunk.StartDate != DateTime.Parse("0001/01/01") && cartChunk.EndDate != DateTime.Parse("0001/01/01"))
                             {
                             txtStartDate.Text = cartChunk.StartDate.ToString("yyyy-MM-dd");
                             txtEndDate.Text = cartChunk.EndDate.ToString("yyyy-MM-dd");
@@ -43,7 +43,7 @@ namespace WavFileHandlerGUI
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"{ex}");
+                            MessageBox.Show($"{ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 }
