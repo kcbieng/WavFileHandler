@@ -97,7 +97,7 @@ namespace WavFileHandler
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception($"Failed to Read CartChunk Data {ex}");
+                            log.Logger.LogMessageAsync($"Failed to Read CartChunk Data {ex}");
                         }
                     }
                     else if (chunkID == "data") { 

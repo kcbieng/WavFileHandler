@@ -13,6 +13,8 @@ using System.Diagnostics.Eventing.Reader;
 using System.Net.Mail;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using log;
+using System.Threading;
 
 namespace WavFileHandlerGUI
 {
@@ -36,7 +38,8 @@ namespace WavFileHandlerGUI
         public static bool updateStartDate;
         public static string sourcePath;
         public static string destinationPath;
-
+        public string displayMessage;
+        public static MainForm Instance { get; private set; }
 
         public static string LogFilePath
         {
@@ -58,6 +61,7 @@ namespace WavFileHandlerGUI
             this.FormClosing += MainForm_FormClosing;
             SetStatusLabelText("Not Started");
             _processedFiles = new ConcurrentDictionary<string, DateTime>(); // Initialize the dictionary
+            Instance = this;
         }
 
         private void btnSourceBrowse_Click(object sender, EventArgs e)
@@ -101,7 +105,7 @@ namespace WavFileHandlerGUI
             StopWatching();
         }
 
-        private void StartWatching(string sourcePath, string destinationPath)
+        private async void StartWatching(string sourcePath, string destinationPath)
         {
             try
             {
@@ -118,7 +122,7 @@ namespace WavFileHandlerGUI
             }
             catch (Exception ex)
             {
-                LogMessage($"Watcher failed to start: {ex}", true);
+                await Logger.LogMessageAsync($"Watcher failed to start: {ex}", true);
             }
         }
 
@@ -157,7 +161,7 @@ namespace WavFileHandlerGUI
                                                       //Console.WriteLine($"{lastProcessedTime}");
                 if (timeSinceLastProcessed.TotalSeconds < debounceTimeInSeconds)
                 {
-                    LogMessage($"'{Path.GetFileName(filePath)}' skipped because that same file was processed in the last 60 Seconds.", true);
+                    await Logger.LogMessageAsync($"'{Path.GetFileName(filePath)}' skipped because that same file was processed in the last 60 Seconds.", true);
                     return; // Ignore the file if it was processed recently
                 }
             }
@@ -180,12 +184,12 @@ namespace WavFileHandlerGUI
                 while (_fileQueue.Count > 0)
                 {
                     string fileToProcess = _fileQueue.Dequeue();
-                    LogMessage($"Processing file:{Path.GetFileName(fileToProcess)}");
+                    await Logger.LogMessageAsync($"Processing file:{Path.GetFileName(fileToProcess)}");
                     if (!File.Exists(fileToProcess))
                     {
                         //Console.WriteLine($"File not Found '{filePath}'");
                         //SetStatusLabelText($"File not Found '{filePath}'");
-                        LogMessage($"File '{fileToProcess}' not found after processing began.", true);
+                        await Logger.LogMessageAsync($"File '{fileToProcess}' not found after processing began.", true);
                         return;
                     }
 
@@ -235,11 +239,11 @@ namespace WavFileHandlerGUI
                                 string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(fileToProcess));
                                 File.Move(fileToProcess, destinationFilePath);
                                 _processWavFileCounter++;
-                                LogMessage($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
+                                await Logger.LogMessageAsync($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' WAVs Processed:{_processWavFileCounter} Watcher Count:{_watcherFileCounter}");
                             }
                             catch (Exception ex)
                             {
-                                LogMessage($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
+                                await Logger.LogMessageAsync($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
                             }
                         });
 
@@ -288,18 +292,18 @@ namespace WavFileHandlerGUI
                                 string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(fileToProcess));
                                 File.Move(fileToProcess, destinationFilePath);
                                 _processMP3FileCounter++;
-                                LogMessage($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                                await Logger.LogMessageAsync($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
                             }
                             catch (Exception ex)
                             {
-                                LogMessage($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
+                                await Logger.LogMessageAsync($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
                             }
                         });
                     }
                     else
                     {
                         // Ignore any other file types
-                        LogMessage($"'{Path.GetFileName(fileToProcess)}' ignored: isn't an allowed file type", true);
+                        await Logger.LogMessageAsync($"'{Path.GetFileName(fileToProcess)}' ignored: isn't an allowed file type", true);
                         return;
                     }
                 }
@@ -319,7 +323,7 @@ namespace WavFileHandlerGUI
                 CartChunk cartChunk = WavFileUtils.ReadCartChunkData(stream);
                 if (cartChunk == null || cartChunk.StartDate == DateTime.Parse("0001/01/01") || cartChunk.EndDate == DateTime.Parse("0001/01/01"))
                 {
-                    LogMessage($"File does not contain CART chunk data.");
+                    Logger.LogMessageAsync($"File does not contain CART chunk data.");
                     return;
                 }
                 {
@@ -368,12 +372,12 @@ namespace WavFileHandlerGUI
                     if (updateStartDate != true)
                     {
                         //Log a Message about updating the EndDate
-                        LogMessage($"Updated EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                        Logger.LogMessageAsync($"Updated EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
                     }
                     else
                     {
                         //Log a Message about updating the EndDate
-                        LogMessage($"Updated StartDate from {oldStartDate.ToString("yyyy-MM-dd")} to {newStartDate} and EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
+                        Logger.LogMessageAsync($"Updated StartDate from {oldStartDate.ToString("yyyy-MM-dd")} to {newStartDate} and EndDate from {originalEndDate} to {newEndDate} {newEndTime}");
                     }
 
                     // Close the stream after the updated EndDate has been written
@@ -382,7 +386,7 @@ namespace WavFileHandlerGUI
             }
             catch (Exception ex)
             {
-                LogMessage($"Failed to update cartchunk: {ex.Message}", true);
+                Logger.LogMessageAsync($"Failed to update cartchunk: {ex.Message}", true);
             }
         }
 
@@ -413,7 +417,7 @@ namespace WavFileHandlerGUI
                 {
                     writer.WriteLine(logMessage);
                 }
-                UpdateLogDisplay(logMessage);
+                //UpdateLogDisplay(logMessage);
                 if (iserror) { SendMail(logMessage); }
             }
             catch (Exception ex)
@@ -422,14 +426,14 @@ namespace WavFileHandlerGUI
                 SetStatusLabelText($"Error writing to log file: {_logFilePath} {ex.Message}");
             }
         }
-
-        private void UpdateLogDisplay(string message)
+        public void UpdateLogDisplay(string message)
         {
             try
             {
                 if (txtLogDisplay.InvokeRequired)
                 {
                     txtLogDisplay.Invoke(new Action<string>(UpdateLogDisplay), message);
+                    
                 }
                 else
                 {
@@ -456,6 +460,7 @@ namespace WavFileHandlerGUI
             toEmail3 = Settings.Default.toEmail3;
             toEmail4 = Settings.Default.toEmail4;
             updateStartDate = Settings.Default.UpdateStartDate;
+            log.LogFunctions.loadEmailDetails();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -500,7 +505,7 @@ namespace WavFileHandlerGUI
                 }
                 smtpClient.Send(mailMessage);
             }
-            catch (Exception ex) { LogMessage($"{ex}"); }
+            catch (Exception ex) { Logger.LogMessageAsync($"{ex}"); }
         }
     } 
 }
