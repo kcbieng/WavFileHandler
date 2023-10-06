@@ -44,6 +44,7 @@ namespace WavFileHandlerGUI
                         catch (Exception ex)
                         {
                             MessageBox.Show($"{ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            log.Logger.LogMessageAsync($"Wav File Info Form Error: {ex}");
                         }
                     }
                 }
