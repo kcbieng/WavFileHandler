@@ -257,6 +257,8 @@ namespace WavFileHandlerGUI
 
                         SetStatusLabelText("Transferring MP3 file...");
 
+                        string outputWavPath = Path.ChangeExtension(filePath, ".wav");
+
                         // Move .mp3 files without processing
                         await Task.Run(async () =>
                         {
@@ -289,14 +291,15 @@ namespace WavFileHandlerGUI
                             }
                             try
                             {
-                                string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(fileToProcess));
-                                File.Move(fileToProcess, destinationFilePath);
+                                string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(outputWavPath));
+                                await mp3FileUtils.ProcessMp3FileAsync(filePath, outputWavPath);
+                                File.Move(outputWavPath, destinationFilePath);
                                 _processMP3FileCounter++;
-                                await Logger.LogMessageAsync($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                                await Logger.LogMessageAsync($"Converted '{Path.GetFileName(fileToProcess)}' and moved to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
                             }
                             catch (Exception ex)
                             {
-                                await Logger.LogMessageAsync($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
+                                await Logger.LogMessageAsync($"Failed to convert and move '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
                             }
                         });
                     }
