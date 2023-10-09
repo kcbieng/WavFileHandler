@@ -1,7 +1,10 @@
 ﻿using NAudio.Wave;
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using TagLib;
@@ -11,21 +14,51 @@ namespace WavFileHandler
 {
     public static class mp3FileUtils
     {
-        public static async Task ProcessMp3FileAsync(string mp3FilePath, string outputWavPath)
+        private static bool testmode = false;
+        
+        public static async Task ProcessMp3FileAsync(string mp3FilePath, string outputWavPath, string destinationFilePath)
         {
+            if (testmode == true)
+            {
+                Console.WriteLine($"MFP:{mp3FilePath}, OWP:{outputWavPath}, DFP: {destinationFilePath}");
+            }
+
             try
             {
+                //0. Remove Leftover TempFiles
+                await removePossibleTempTrash(outputWavPath);
+
                 // 1. Read ID3 Tag
                 var cartChunk = ConvertId3ToCartChunk(mp3FilePath);
+                if (testmode == true)
+                {
+                    await Task.Delay(1000);
+                };
 
                 // 2. Convert MP3 to 16-bit PCM WAV
                 await ConvertMp3ToWavAsync(mp3FilePath, outputWavPath);
+                if (testmode == true)
+                {
+                    await Task.Delay(1000);
+                };
 
                 // 3. Write CART Chunk to WAV
                 await WriteCartChunkToWavAsync(outputWavPath, cartChunk);
+                if (testmode == true)
+                {
+                    await Task.Delay(1000);
+                };
+
+                // 4. Move File to New Folder
+                await moveWavFile(outputWavPath, destinationFilePath);
+                if (testmode == true)
+                {
+                    await Task.Delay(1000);
+                };
 
                 // Log success message
                 await log.Logger.LogMessageAsync($"Converted MP3 '{mp3FilePath}' to WAV '{outputWavPath}'.");
+                
             }
             catch (Exception ex)
             {
@@ -47,12 +80,18 @@ namespace WavFileHandler
                 cartChunk.Category = file.Tag.FirstGenre ?? "Unknown Genre";
 
                 // Handling dates might require parsing from ID3 format to DateTime
-                cartChunk.StartDate = ParseId3Date(file.Tag.Year.ToString()) ?? DateTime.MinValue;
-                cartChunk.EndDate = ParseId3Date(file.Tag.Year.ToString()) ?? DateTime.MaxValue;
-
+                cartChunk.StartDate = DateTime.Today;
+                DateTime EndDate = MainForm.GetNextSunday(cartChunk.StartDate);
+                TimeSpan EndTime = new TimeSpan(23, 59, 59);
+                cartChunk.EndDate = EndDate.Date + EndTime;
+                if (testmode == true)
+                {
+                    Console.WriteLine($"{cartChunk.EndDate}");
+                }
+                cartChunk.EndTime = DateTime.ParseExact("23:59:59", "HH:mm:ss", CultureInfo.InvariantCulture);
                 cartChunk.ClientID = file.Tag.FirstComposer ?? "Unknown Client";
                 cartChunk.CutID = file.Tag.Track.ToString("D2") ?? "00"; // Simplified, adjust as needed
-                cartChunk.UserDef = file.Tag.InitialKey ?? "No Key";
+                cartChunk.UserDef = file.Tag.Album ?? "No Key";
                 //cartChunk.OutCue = file.Tag.OriginalFilename ?? "Unknown Cue";
                 cartChunk.Version = "0101";
             }
@@ -91,7 +130,7 @@ namespace WavFileHandler
         private static async Task WriteCartChunkToWavAsync(string wavFile, CartChunk cartChunk)
         {
 
-            var testmode = true;
+            
             var writeCartChunk = true;
             if (writeCartChunk == true)
             {
@@ -115,19 +154,28 @@ namespace WavFileHandler
 
                         // Get fmt chunk size
                         int fmtSize = BitConverter.ToInt32(fmtHeader, 4);
-                        Console.WriteLine($"fmtsize={fmtSize}");
+                        if (testmode == true)
+                        {
+                            Console.WriteLine($"fmtsize={fmtSize}");
+                        }
 
                         // Move stream position to the end of fmt chunk
                         stream.Seek(fmtSize, SeekOrigin.Current);
                         var fmtend = stream.Position;
-                        Console.WriteLine($"{stream.Position}");
+                        if (testmode == true)
+                        {
+                            Console.WriteLine($"{stream.Position}");
+                        }
 
                         byte[] remainingData = new byte[stream.Length - stream.Position];
                         await stream.ReadAsync(remainingData, 0, remainingData.Length);
 
                         // Move stream position back to the end of fmt chunk
                         stream.Seek(fmtend, SeekOrigin.Begin);
-                        Console.WriteLine($"{stream.Position}");
+                        if (testmode == true)
+                        {
+                            Console.WriteLine($"{stream.Position}");
+                        }
 
                         if (testmode == true) { Console.WriteLine("Write CART chunk ID"); };
                         // Write CART chunk ID
@@ -266,7 +314,10 @@ namespace WavFileHandler
                         //int fileSize = (int)stream.Length;
                         //Console.WriteLine($"{stream.Length}");
                         int riffSize = BitConverter.ToInt32(riffHeader, 4) + BitConverter.ToInt32(cartchunkSize, 0) + 8;
-                        Console.WriteLine($"rheader:{BitConverter.ToInt32(riffHeader, 4)} rsize:{riffSize} ccsize:{BitConverter.ToInt32(cartchunkSize, 0)}");
+                        if (testmode == true)
+                        {
+                            Console.WriteLine($"rheader:{BitConverter.ToInt32(riffHeader, 4)} rsize:{riffSize} ccsize:{BitConverter.ToInt32(cartchunkSize, 0)}");
+                        }
 
                         // Update the size in the RIFF header
                         byte[] riffSizeBytes = BitConverter.GetBytes(riffSize);
@@ -276,6 +327,9 @@ namespace WavFileHandler
                         // Ensure all data is written to the file
                         await stream.FlushAsync();
 
+                        stream.Close();
+
+                        if (testmode == true) { Console.WriteLine("Finished Writing Cart Chunk to File"); };
                         //bool isUpdated = await UpdateRiffHeaderSizeAsync(wavFile);
                         //if (!isUpdated)
                         //{
@@ -288,7 +342,7 @@ namespace WavFileHandler
                     // Log or handle the error as per your use case
                     await log.Logger.LogMessageAsync($"Error writing CART chunk to WAV '{wavFile}': {ex.Message}", true);
                 }
-            } else { log.Logger.LogMessageAsync("Cart Chunk Writing Disabled"); }
+            } else {  await log.Logger.LogMessageAsync("Cart Chunk Writing Disabled"); }
         }
 
         private static DateTime? ParseId3Date(string dateString)
@@ -394,6 +448,52 @@ namespace WavFileHandler
 
             return output;
         }
+        
+        private async static Task removePossibleTempTrash(string trashPath)
+        {
+            if (testmode == true) { Console.WriteLine("Remove Possible Temp Trash"); };
 
+            try
+            {
+                System.IO.File.Delete(trashPath);
+            } catch (Exception ex) {
+                await log.Logger.LogMessageAsync($"{ex}");
+                throw;
+            };
+        }
+        private async static Task moveWavFile(string outputWavPath, string destinationFilePath)
+        {
+            if(testmode == true) { 
+            Console.WriteLine($"Move File to Destination: {outputWavPath} to {destinationFilePath}");
+            };
+
+            while (true)
+            {
+                try
+                {
+                    var lastWriteTime = System.IO.File.GetLastWriteTimeUtc(outputWavPath);
+
+                    //Wait for a short delay before processing the file
+                    await Task.Delay(1000);
+
+                    DateTime newLastWriteTime = System.IO.File.GetLastWriteTimeUtc(outputWavPath);
+
+                    // Check if the file has been modified during the delay
+                    if (newLastWriteTime == lastWriteTime)
+                    {
+                        System.IO.File.Move(outputWavPath, destinationFilePath);
+                        break;
+                    }
+                }
+                catch (IOException ex)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    if (testmode == true)
+                    {
+                        Console.WriteLine($"Move IO Exception {ex}");
+                    };
+                }
+            }
+        }
     }
 }

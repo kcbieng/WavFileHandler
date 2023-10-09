@@ -194,7 +194,7 @@ namespace WavFileHandlerGUI
                     }
 
                     string fileExtension = Path.GetExtension(fileToProcess).ToLower();
-                    Console.WriteLine($"'{fileToProcess}'");
+                    //Console.WriteLine($"'{fileToProcess}'");
                     if (fileExtension == ".wav")
                     {
 
@@ -249,15 +249,15 @@ namespace WavFileHandlerGUI
 
                         SetStatusLabelText("Watching for files...");
                     }
-                    else if (fileExtension == ".mp3")
+                    else if (fileExtension == ".mp3" || fileExtension == ".m4A" || fileExtension == ".aac" || fileExtension == ".mp2")
                     {
 
                         // Update the last processed time for the file
                         _processedFiles.AddOrUpdate(fileToProcess, DateTime.Now, (key, oldValue) => DateTime.Now);
 
-                        SetStatusLabelText("Transferring MP3 file...");
+                        SetStatusLabelText("Converting Audio file...");
 
-                        string outputWavPath = Path.ChangeExtension(filePath, ".wav");
+                        string outputWavPath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(fileToProcess) + ".wav");
 
                         // Move .mp3 files without processing
                         await Task.Run(async () =>
@@ -292,10 +292,12 @@ namespace WavFileHandlerGUI
                             try
                             {
                                 string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(outputWavPath));
-                                await mp3FileUtils.ProcessMp3FileAsync(filePath, outputWavPath);
-                                File.Move(outputWavPath, destinationFilePath);
+                                //Console.WriteLine($"MFP:{fileToProcess}, OWP:{outputWavPath}, DFP: {destinationFilePath}");
+                                await mp3FileUtils.ProcessMp3FileAsync(fileToProcess, outputWavPath, destinationFilePath);
+                                await Task.Delay(1000);
                                 _processMP3FileCounter++;
-                                await Logger.LogMessageAsync($"Converted '{Path.GetFileName(fileToProcess)}' and moved to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                                await Logger.LogMessageAsync($"Moved '{Path.GetDirectoryName(outputWavPath)}' to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                                
                             }
                             catch (Exception ex)
                             {
@@ -314,7 +316,7 @@ namespace WavFileHandlerGUI
             finally
             {
                 _isProcessing = false;
-                SetStatusLabelText("Watching for files...");
+                SetStatusLabelText("Watching for files...");                
             }
         }
 
@@ -393,7 +395,41 @@ namespace WavFileHandlerGUI
             }
         }
 
-        static DateTime GetNextSunday(DateTime currentDate)
+        private async static Task moveWavFile(string outputWavPath, string destinationFilePath)
+        {
+            //if (testmode == true) { 
+                Console.WriteLine($"Move File to Destination: {outputWavPath} to {destinationFilePath}");
+            //};
+
+            //while (true)
+            //{
+                try
+                {
+                    //var lastWriteTime = System.IO.File.GetLastWriteTimeUtc(outputWavPath);
+
+                    // Wait for a short delay before processing the file
+                    await Task.Delay(1000);
+
+                    //DateTime newLastWriteTime = System.IO.File.GetLastWriteTimeUtc(outputWavPath);
+
+                    // Check if the file has been modified during the delay
+                    //if (newLastWriteTime == lastWriteTime)
+                    //{
+                        System.IO.File.Move(outputWavPath, destinationFilePath);
+                        //break;
+                    //}
+                }
+                catch (IOException ex)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    //if (testmode == true) {
+                        Console.WriteLine($"Move IO Exception {ex}");
+                    //};
+                }
+            //}
+        }
+
+        public static DateTime GetNextSunday(DateTime currentDate)
         {
             int daysUntilSunday = ((int)DayOfWeek.Sunday - (int)currentDate.DayOfWeek + 7) % 7;
             return currentDate.AddDays(daysUntilSunday);
