@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing.Text;
 using System.Windows.Forms;
+using WavFileHandler;
 using WavFileHandler.Properties;
 
 namespace WavFileHandlerGUI
@@ -25,6 +26,8 @@ namespace WavFileHandlerGUI
             toEmail3_Textbox.Text = Settings.Default.toEmail3;
             toEmail4_Textbox.Text = Settings.Default.toEmail4;
             updateStartDate.Checked = Settings.Default.UpdateStartDate;
+            convertFiles.Checked = Settings.Default.convertFiles;
+            testMode.Checked = MainForm.testMode;
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -37,6 +40,7 @@ namespace WavFileHandlerGUI
             Settings.Default.toEmail3 = toEmail3_Textbox.Text;
             Settings.Default.toEmail4 = toEmail4_Textbox.Text;
             Settings.Default.UpdateStartDate = updateStartDate.Checked;
+            Settings.Default.convertFiles = convertFiles.Checked;
             MainForm.mailServer = mailServer_Textbox.Text.TrimEnd('\0');
             MainForm.mailServerPort = int.Parse(mailServerPort_Textbox.Text);
             MainForm.fromEmailAddress = fromEmail_Textbox.Text.TrimEnd('\0');
@@ -45,6 +49,13 @@ namespace WavFileHandlerGUI
             MainForm.toEmail3 = toEmail3_Textbox.Text.TrimEnd('\0');
             MainForm.toEmail4 = toEmail4_Textbox.Text.TrimEnd('\0');
             MainForm.updateStartDate = updateStartDate.Checked;
+            MainForm.convertFiles = convertFiles.Checked;
+            if (MainForm.testMode != testMode.Checked) {
+                MainForm.testMode = testMode.Checked;
+                mp3FileUtils.updateTestMode();
+                WavFileUtils.updateTestMode();
+                WavFileInfoForm.updateTestMode();
+            }
             Settings.Default.Save();
             log.LogFunctions.loadEmailDetails();
             this.Close();
@@ -60,8 +71,9 @@ namespace WavFileHandlerGUI
             Settings.Default.UpdateStartDate = false;
             Settings.Default.SourcePath = null;
             Settings.Default.DestinationPath = null;
+            Settings.Default.convertFiles = false;
             MainForm.sourcePath = null;
-            MainForm.destinationPath = null;
+            MainForm.destinationPath = null;            
             Settings.Default.Save();
             this.Close();
         }

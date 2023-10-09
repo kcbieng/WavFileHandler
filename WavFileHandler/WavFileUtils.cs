@@ -9,6 +9,8 @@ namespace WavFileHandler
 {
     public static class WavFileUtils
     {
+        public static bool testMode = MainForm.testMode;
+
         public static CartChunk ReadCartChunkData(FileStream stream)
         {
             stream.Position = 0;
@@ -128,7 +130,9 @@ namespace WavFileHandler
             result = reader.ReadBytes(length);
 
             return true;
+
         }
+        public static void updateTestMode() { testMode = MainForm.testMode; }
     }
 }
 

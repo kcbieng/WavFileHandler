@@ -39,6 +39,8 @@ namespace WavFileHandlerGUI
         public static string sourcePath;
         public static string destinationPath;
         public string displayMessage;
+        public static bool convertFiles;
+        public static bool testMode;
         public static MainForm Instance { get; private set; }
 
         public static string LogFilePath
@@ -249,7 +251,7 @@ namespace WavFileHandlerGUI
 
                         SetStatusLabelText("Watching for files...");
                     }
-                    else if (fileExtension == ".mp3" || fileExtension == ".m4A" || fileExtension == ".aac" || fileExtension == ".mp2")
+                    else if (convertFiles == true && fileExtension == ".mp3" || fileExtension == ".m4A" || fileExtension == ".aac" || fileExtension == ".mp2")
                     {
 
                         // Update the last processed time for the file
@@ -302,6 +304,57 @@ namespace WavFileHandlerGUI
                             catch (Exception ex)
                             {
                                 await Logger.LogMessageAsync($"Failed to convert and move '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
+                            }
+                        });
+                    }
+                    else if (convertFiles == false && fileExtension == ".mp3")
+                    {
+
+                        // Update the last processed time for the file
+                        _processedFiles.AddOrUpdate(fileToProcess, DateTime.Now, (key, oldValue) => DateTime.Now);
+
+                        SetStatusLabelText("Transferring MP3 file...");
+
+                        // Move .mp3 files without processing
+                        await Task.Run(async () =>
+                        {
+                            DateTime lastWriteTime;
+                            while (true)
+                            {
+                                try
+                                {
+                                    lastWriteTime = File.GetLastWriteTimeUtc(fileToProcess);
+
+                                    // Wait for a short delay before moving the file
+                                    await Task.Delay(1000);
+
+                                    DateTime newLastWriteTime = File.GetLastWriteTimeUtc(fileToProcess);
+
+                                    // Check if the file has been modified during the delay
+                                    if (newLastWriteTime == lastWriteTime)
+                                    {
+                                        using (FileStream stream = File.Open(fileToProcess, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                                        {
+                                            stream.Close();
+                                        }
+                                        break;
+                                    }
+                                }
+                                catch (IOException)
+                                {
+                                    System.Threading.Thread.Sleep(1000);
+                                }
+                            }
+                            try
+                            {
+                                string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(fileToProcess));
+                                File.Move(fileToProcess, destinationFilePath);
+                                _processMP3FileCounter++;
+                                await log.Logger.LogMessageAsync($"Moved '{Path.GetFileName(fileToProcess)}' to '{Path.GetDirectoryName(destinationFilePath)}' MP3s Processed:{_processMP3FileCounter} Watcher Count:{_watcherFileCounter}");
+                            }
+                            catch (Exception ex)
+                            {
+                                await log.Logger.LogMessageAsync($"Failed to copy '{Path.GetFileName(fileToProcess)}': {ex.Message}", true);
                             }
                         });
                     }
@@ -499,6 +552,7 @@ namespace WavFileHandlerGUI
             toEmail3 = Settings.Default.toEmail3;
             toEmail4 = Settings.Default.toEmail4;
             updateStartDate = Settings.Default.UpdateStartDate;
+            convertFiles = Settings.Default.convertFiles;
             log.LogFunctions.loadEmailDetails();
         }
 

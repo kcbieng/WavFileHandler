@@ -14,10 +14,12 @@ namespace WavFileHandler
 {
     public static class mp3FileUtils
     {
-        private static bool testmode = false;
+        private static bool testmode = MainForm.testMode;
         
         public static async Task ProcessMp3FileAsync(string mp3FilePath, string outputWavPath, string destinationFilePath)
         {
+            testmode = MainForm.testMode;
+
             if (testmode == true)
             {
                 Console.WriteLine($"MFP:{mp3FilePath}, OWP:{outputWavPath}, DFP: {destinationFilePath}");
@@ -50,7 +52,7 @@ namespace WavFileHandler
                 };
 
                 // 4. Move File to New Folder
-                await moveWavFile(outputWavPath, destinationFilePath);
+                await moveWavFile(outputWavPath, destinationFilePath, mp3FilePath);
                 if (testmode == true)
                 {
                     await Task.Delay(1000);
@@ -461,7 +463,7 @@ namespace WavFileHandler
                 throw;
             };
         }
-        private async static Task moveWavFile(string outputWavPath, string destinationFilePath)
+        private async static Task moveWavFile(string outputWavPath, string destinationFilePath, string mp3FilePath)
         {
             if(testmode == true) { 
             Console.WriteLine($"Move File to Destination: {outputWavPath} to {destinationFilePath}");
@@ -482,6 +484,7 @@ namespace WavFileHandler
                     if (newLastWriteTime == lastWriteTime)
                     {
                         System.IO.File.Move(outputWavPath, destinationFilePath);
+                        System.IO.File.Delete(mp3FilePath);
                         break;
                     }
                 }
@@ -491,9 +494,11 @@ namespace WavFileHandler
                     if (testmode == true)
                     {
                         Console.WriteLine($"Move IO Exception {ex}");
-                    };
+                    }
                 }
             }
         }
+
+        public static void updateTestMode() { testmode = MainForm.testMode; }
     }
 }

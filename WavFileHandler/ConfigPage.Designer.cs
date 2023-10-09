@@ -45,6 +45,8 @@
             this.saveButton = new System.Windows.Forms.Button();
             this.updateStartDate = new System.Windows.Forms.CheckBox();
             this.clearSettings = new System.Windows.Forms.Button();
+            this.convertFiles = new System.Windows.Forms.CheckBox();
+            this.testMode = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // fromEmail_Textbox
@@ -161,7 +163,7 @@
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(183, 238);
+            this.saveButton.Location = new System.Drawing.Point(183, 278);
             this.saveButton.Name = "saveButton";
             this.saveButton.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.saveButton.Size = new System.Drawing.Size(75, 23);
@@ -182,19 +184,41 @@
             // 
             // clearSettings
             // 
-            this.clearSettings.Location = new System.Drawing.Point(12, 238);
+            this.clearSettings.Location = new System.Drawing.Point(12, 278);
             this.clearSettings.Name = "clearSettings";
             this.clearSettings.Size = new System.Drawing.Size(84, 23);
             this.clearSettings.TabIndex = 17;
             this.clearSettings.Text = "Clear Settings";
-            this.clearSettings.Click += new System.EventHandler(this.clearSettings_Click);
             this.clearSettings.UseVisualStyleBackColor = true;
+            this.clearSettings.Click += new System.EventHandler(this.clearSettings_Click);
+            // 
+            // convertFiles
+            // 
+            this.convertFiles.AutoSize = true;
+            this.convertFiles.Location = new System.Drawing.Point(12, 218);
+            this.convertFiles.Name = "convertFiles";
+            this.convertFiles.Size = new System.Drawing.Size(213, 17);
+            this.convertFiles.TabIndex = 18;
+            this.convertFiles.Text = "Convert MP3s AACs and MP2s to WAV";
+            this.convertFiles.UseVisualStyleBackColor = true;
+            // 
+            // testMode
+            // 
+            this.testMode.AutoSize = true;
+            this.testMode.Location = new System.Drawing.Point(12, 238);
+            this.testMode.Name = "testMode";
+            this.testMode.Size = new System.Drawing.Size(181, 17);
+            this.testMode.TabIndex = 19;
+            this.testMode.Text = "Activate Console Test Messages";
+            this.testMode.UseVisualStyleBackColor = true;
             // 
             // ConfigPage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(270, 273);
+            this.ClientSize = new System.Drawing.Size(270, 308);
+            this.Controls.Add(this.testMode);
+            this.Controls.Add(this.convertFiles);
             this.Controls.Add(this.clearSettings);
             this.Controls.Add(this.updateStartDate);
             this.Controls.Add(this.saveButton);
@@ -239,5 +263,7 @@
         private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.CheckBox updateStartDate;
         private System.Windows.Forms.Button clearSettings;
+        private System.Windows.Forms.CheckBox convertFiles;
+        private System.Windows.Forms.CheckBox testMode;
     }
 }

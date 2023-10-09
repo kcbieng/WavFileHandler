@@ -7,6 +7,8 @@ namespace WavFileHandlerGUI
 {
     public partial class WavFileInfoForm : Form
     {
+        public static bool testMode = MainForm.testMode;
+
         public WavFileInfoForm()
         {
             InitializeComponent();
@@ -50,5 +52,6 @@ namespace WavFileHandlerGUI
                 }
             }
         }
+        public static void updateTestMode() { testMode = MainForm.testMode; }
     }
 }
