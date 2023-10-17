@@ -47,6 +47,7 @@
             this.clearSettings = new System.Windows.Forms.Button();
             this.convertFiles = new System.Windows.Forms.CheckBox();
             this.testMode = new System.Windows.Forms.CheckBox();
+            this.aboutBox = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // fromEmail_Textbox
@@ -163,7 +164,7 @@
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(183, 278);
+            this.saveButton.Location = new System.Drawing.Point(187, 278);
             this.saveButton.Name = "saveButton";
             this.saveButton.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.saveButton.Size = new System.Drawing.Size(75, 23);
@@ -184,7 +185,7 @@
             // 
             // clearSettings
             // 
-            this.clearSettings.Location = new System.Drawing.Point(12, 278);
+            this.clearSettings.Location = new System.Drawing.Point(93, 278);
             this.clearSettings.Name = "clearSettings";
             this.clearSettings.Size = new System.Drawing.Size(84, 23);
             this.clearSettings.TabIndex = 17;
@@ -212,11 +213,21 @@
             this.testMode.Text = "Activate Console Test Messages";
             this.testMode.UseVisualStyleBackColor = true;
             // 
+            // aboutBox
+            // 
+            this.aboutBox.Location = new System.Drawing.Point(2, 278);
+            this.aboutBox.Name = "aboutBox";
+            this.aboutBox.Size = new System.Drawing.Size(84, 23);
+            this.aboutBox.TabIndex = 20;
+            this.aboutBox.Text = "About";
+            this.aboutBox.UseVisualStyleBackColor = true;
+            // 
             // ConfigPage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(270, 308);
+            this.Controls.Add(this.aboutBox);
             this.Controls.Add(this.testMode);
             this.Controls.Add(this.convertFiles);
             this.Controls.Add(this.clearSettings);
@@ -265,5 +276,6 @@
         private System.Windows.Forms.Button clearSettings;
         private System.Windows.Forms.CheckBox convertFiles;
         private System.Windows.Forms.CheckBox testMode;
+        private System.Windows.Forms.Button aboutBox;
     }
 }
